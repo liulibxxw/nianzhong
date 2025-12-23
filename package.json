@@ -1,3 +1,4 @@
+
 {
   "name": "空白项目",
   "private": true,
@@ -10,7 +11,9 @@
   },
   "dependencies": {
     "react": "^19.2.3",
-    "react-dom": "^19.2.3"
+    "react-dom": "^19.2.3",
+    "lucide-react": "0.469.0",
+    "dom-to-image-more": "2.8.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
