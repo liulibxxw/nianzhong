@@ -203,7 +203,14 @@ const App = () => {
   const handlePaste = (id: string, field: keyof SummaryItem, e: React.ClipboardEvent) => {
     e.preventDefault();
     const text = e.clipboardData.getData('text/plain');
+    if (!text) return;
+
+    // 插入文本
     document.execCommand('insertText', false, text);
+    
+    // 强制立即同步到状态，防止 ResizeObserver 触发的重绘导致 DOM 内容被旧状态覆盖
+    const target = e.currentTarget as HTMLElement;
+    updateItemField(id, field, target.innerHTML);
   };
 
   const addCategory = () => {
@@ -430,12 +437,12 @@ const App = () => {
         minHeight: isExport ? '0' : '2560px',
         paddingBottom: '30px'
       }}
-      className={`text-[${currentTheme.text}] pt-[30px] px-[100px] flex flex-col relative transition-colors duration-700 overflow-hidden`}
+      className={`text-[${currentTheme.text}] pt-[20px] px-[100px] flex flex-col relative transition-colors duration-700 overflow-hidden`}
     >
       <div className="absolute inset-0 opacity-[0.2] pointer-events-none" style={{ backgroundImage: TEXTURE_URL, backgroundSize: '64px 64px' }}></div>
       
-      <div className="w-full flex flex-col mb-[60px] relative z-10 shrink-0">
-        <div className="flex justify-between items-end border-b-[4px] border-current pb-8 mb-[40px]" style={{ color: currentTheme.text }}>
+      <div className="w-full flex flex-col mb-[20px] relative z-10 shrink-0">
+        <div className="flex justify-between items-end border-b-[4px] border-current pb-8 mb-[20px]" style={{ color: currentTheme.text }}>
           <div className="flex flex-col">
             <span contentEditable={!isExport} suppressContentEditableWarning onBlur={(e) => updateDataField('summaryType', e.currentTarget.innerHTML)} className={`font-serif text-[32px] tracking-[0.2em] font-black outline-none`}>
               {data.summaryType}
@@ -470,7 +477,7 @@ const App = () => {
                 </div>
               </div>
 
-              <div className="flex items-start gap-12 mb-12">
+              <div className="flex items-start gap-12 mb-6">
                 <div className="flex flex-col relative z-20 shrink-0">
                   <span className="text-[20px] font-bold tracking-[0.4em] mb-2 uppercase opacity-60">AUTHENTICATED BY</span>
                   <span contentEditable={!isExport} suppressContentEditableWarning onBlur={(e) => updateDataField('author', e.currentTarget.innerHTML)} className={`text-[56px] font-serif font-black tracking-widest underline decoration-[8px] underline-offset-[16px] outline-none w-fit`} style={{ textDecorationColor: currentTheme.accent }}>
@@ -529,13 +536,13 @@ const App = () => {
         </div>
       </div>
 
-      <div className={`space-y-[100px] w-full max-w-[1240px] mx-auto mb-[120px] relative z-10 ${!isExport ? 'flex-1' : ''}`}>
+      <div className={`space-y-[20px] w-full max-w-[1240px] mx-auto mb-[10px] relative z-10 ${!isExport ? 'flex-1' : ''}`}>
         {itemsToRender.map((item) => {
           const isCategoryOpen = activePicker?.id === item.id && activePicker?.type === 'category';
           const isTypeOpen = activePicker?.id === item.id && activePicker?.type === 'type';
           
           return (
-            <div key={item.id} className={`group relative flex gap-[110px] items-start transition-all duration-500 p-[55px] -mx-[55px] rounded-[70px]`}>
+            <div key={item.id} className={`group relative flex gap-[110px] items-start transition-all duration-500 p-[40px] -mx-[40px] rounded-[70px]`}>
               <div className="flex flex-col items-end pt-[22px] min-w-[260px] relative">
                 <span className="text-[120px] font-serif italic leading-none mb-[32px] font-black opacity-10" style={{ color: currentTheme.accent }}>{String(data.items.findIndex(i => i.id === item.id) + 1).padStart(2, '0')}</span>
                 <span contentEditable={!isExport} suppressContentEditableWarning onBlur={(e) => updateItemField(item.id, 'date', e.currentTarget.innerText)} className={`text-[34px] font-mono font-black tracking-widest outline-none`}>{item.date}</span>
@@ -554,7 +561,7 @@ const App = () => {
               </div>
 
               <div className="flex-1 flex flex-col">
-                <div className="flex justify-between items-start mb-[45px]">
+                <div className="flex justify-between items-start mb-[30px]">
                   <h2 contentEditable={!isExport} suppressContentEditableWarning onBlur={(e) => updateItemField(item.id, 'title', e.currentTarget.innerHTML)} className={`text-[76px] font-serif font-black leading-tight tracking-tight outline-none w-full`}>{item.title}</h2>
                   {!isExport && (
                     <div className="flex gap-4 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
@@ -563,7 +570,7 @@ const App = () => {
                   )}
                 </div>
 
-                <div className="flex items-center gap-[35px] mb-[45px] relative">
+                <div className="flex items-center gap-[35px] mb-[30px] relative">
                   <div className="h-[3px] w-[110px]" style={{ backgroundColor: currentTheme.accent }}></div>
                   <div className="relative">
                     <span 
@@ -580,13 +587,16 @@ const App = () => {
                 <div 
                   contentEditable={!isExport} 
                   suppressContentEditableWarning 
-                  onBlur={(e) => { updateItemField(item.id, 'content', e.currentTarget.innerHTML); }} 
+                  onInput={(e) => {
+                    // 即时同步状态，防止由于 ResizeObserver 导致的重绘抹除未保存的 DOM 修改
+                    updateItemField(item.id, 'content', e.currentTarget.innerHTML);
+                  }}
                   onPaste={(e) => handlePaste(item.id, 'content', e)}
-                  className={`text-[44px] leading-[1.85] font-serif text-justify whitespace-pre-wrap outline-none w-full min-h-[120px] mb-20`}
+                  className={`text-[44px] leading-[1.85] font-serif text-justify whitespace-pre-wrap break-words break-all outline-none w-full min-h-[1em] mb-8`}
                   dangerouslySetInnerHTML={{ __html: item.content }}
                 />
 
-                <div className="flex items-start gap-12 border-t-[1px] pt-16" style={{ borderColor: `${currentTheme.text}22` }}>
+                <div className="flex items-start gap-12 border-t-[1px] pt-8" style={{ borderColor: `${currentTheme.text}22` }}>
                   <div className="shrink-0 flex flex-col items-center">
                     <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4 shadow-lg" style={{ backgroundColor: currentTheme.accent }}>
                       <Quote size={32} color="white" />
@@ -598,9 +608,11 @@ const App = () => {
                     <div 
                       contentEditable={!isExport} 
                       suppressContentEditableWarning 
-                      onBlur={(e) => { updateItemField(item.id, 'thoughts', e.currentTarget.innerHTML); }} 
+                      onInput={(e) => {
+                        updateItemField(item.id, 'thoughts', e.currentTarget.innerHTML);
+                      }}
                       onPaste={(e) => handlePaste(item.id, 'thoughts', e)}
-                      className="text-[40px] leading-[1.8] font-serif font-light italic outline-none w-full whitespace-pre-wrap opacity-90 min-h-[100px]"
+                      className="text-[40px] leading-[1.8] font-serif font-light italic break-words break-all outline-none w-full whitespace-pre-wrap opacity-90 min-h-[1em]"
                       dangerouslySetInnerHTML={{ __html: item.thoughts }}
                     />
                   </div>
@@ -611,7 +623,7 @@ const App = () => {
         })}
       </div>
 
-      <div className={`relative z-10 shrink-0 ${!isExport ? 'mt-auto' : 'mt-[30px]'}`}>
+      <div className={`relative z-10 shrink-0 ${!isExport ? 'mt-auto' : 'mt-[5px]'}`}>
         <div className="w-full h-[4px] mb-[20px] flex gap-4">
            <div className="flex-1 h-full rounded-full" style={{ backgroundColor: `${currentTheme.text}1A` }}></div>
            <div className="w-20 h-full rounded-full" style={{ backgroundColor: currentTheme.accent }}></div>
@@ -891,7 +903,7 @@ const App = () => {
           
           <div className="relative">
             {showExportMenu && (
-              <div className="absolute bottom-[110%] right-[0px] mb-5 w-24 bg-white/95 backdrop-blur-3xl rounded-[24px] shadow-[0_20px_40px_-12px_rgba(0,0,0,0.3)] border border-white/60 p-1.5 animate-in slide-in-from-bottom-3 fade-in duration-300 z-[300]" onClick={e => e.stopPropagation()}>
+              <div className="absolute bottom-[110%] right-[0px] mb-5 w-24 bg-white/95 backdrop-blur-3xl rounded-[32px] shadow-[0_20px_40px_-12px_rgba(0,0,0,0.3)] border border-white/60 p-1.5 animate-in slide-in-from-bottom-3 fade-in duration-300 z-[300]" onClick={e => e.stopPropagation()}>
                 {exportSubMode === 'main' ? (
                   <div className="flex flex-col gap-1">
                     <button onClick={handleExportLong} className="flex flex-col items-center gap-1 p-2.5 hover:bg-black/5 rounded-2xl transition-all group border-b border-black/5 pb-2.5">
