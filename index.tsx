@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { 
@@ -25,7 +26,8 @@ import {
   Type, 
   Palette, 
   Search,
-  Tags
+  Tags,
+  Layout
 } from 'lucide-react';
 import domtoimage from 'dom-to-image-more';
 
@@ -92,7 +94,7 @@ const App = () => {
         title: '岁末起始',
         date: '2025.01.01',
         category: '未分类',
-        type: 'TAG',
+        type: '无',
         content: '这是一个新篇章的开始。文字是时间的锚点，记录下这些琐碎，便是留住了流沙。',
         thoughts: '当时写下这段话的时候，窗外正下着小雨。有些感慨，但也对未来充满期待。'
       }
@@ -171,7 +173,7 @@ const App = () => {
       title: '点击编辑标题',
       date: new Date().toISOString().split('T')[0].replace(/-/g, '.'),
       category: data.savedCategories[0] || '未分类',
-      type: data.savedTypes[0] || 'TAG',
+      type: data.savedTypes[0] || '无',
       content: '点击这里开始记录你的故事...',
       thoughts: '写下关于这条记录的个人感悟...'
     };
@@ -204,10 +206,7 @@ const App = () => {
     const text = e.clipboardData.getData('text/plain');
     if (!text) return;
 
-    // 插入纯文本
     document.execCommand('insertText', false, text);
-    
-    // 强制立即同步到状态，防止 ResizeObserver 触发的重绘导致 DOM 内容被旧状态覆盖
     const target = e.currentTarget as HTMLElement;
     updateItemField(id, field, target.innerHTML);
   };
@@ -294,7 +293,6 @@ const App = () => {
       });
       return { ...prev, items: newItems };
     });
-    alert(`已完成对关键词 "${batchSearchTerm}" 所在段落的批量对齐`);
   };
 
   const captureCanvas = async () => {
@@ -723,16 +721,6 @@ const App = () => {
                     {color === '#FFFFFF' && <div className="w-1/2 h-[1px] bg-gray-100 rotate-45"></div>}
                   </button>
                 ))}
-                <button 
-                  onClick={() => {
-                    applyStyle('foreColor', currentTheme.accent);
-                    setShowColorPicker(false);
-                  }}
-                  className="w-8 h-8 rounded-full shrink-0 shadow-inner border border-black/5 transition-transform active:scale-90 flex flex-col items-center justify-center gap-0 overflow-hidden bg-gray-50"
-                >
-                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: currentTheme.accent }}></div>
-                  <span className="text-[5px] font-black uppercase opacity-60">主题</span>
-                </button>
               </div>
             </div>
           )}
@@ -774,7 +762,7 @@ const App = () => {
                   <input 
                     value={batchSearchTerm} 
                     onChange={e => setBatchSearchTerm(e.target.value)}
-                    placeholder="搜索关键词进行批量对齐..." 
+                    placeholder="搜索并批量对齐..." 
                     className="w-full bg-black/5 rounded-xl pl-9 pr-4 py-2.5 text-[12px] font-bold outline-none focus:bg-white border border-transparent focus:border-black/10 transition-all"
                     onClick={e => e.stopPropagation()}
                   />
@@ -793,37 +781,42 @@ const App = () => {
         <footer className="h-14 flex items-center justify-around px-4 safe-area-bottom shrink-0">
           <div className="relative">
             {showConfig && (
-              <div className="absolute bottom-[110%] left-[0px] mb-5 w-[calc(100vw-32px)] max-w-72 bg-white/95 backdrop-blur-3xl rounded-[32px] shadow-[0_20px_40px_-12px_rgba(0,0,0,0.3)] border border-white/60 p-6 animate-in slide-in-from-bottom-3 fade-in duration-300 z-[300]" onClick={e => e.stopPropagation()}>
-                <div className="space-y-5">
-                  <h3 className="text-sm font-black text-gray-800 tracking-tight flex items-center gap-2 mb-2">
-                    <Settings2 size={16} /> 全书设定
-                  </h3>
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1">主标题</label>
-                    <input value={data.mainTitle} onChange={e => setData({...data, mainTitle: e.target.value})} className="w-full bg-black/5 px-4 py-3 rounded-2xl text-xs font-serif font-black outline-none focus:bg-white focus:ring-2 focus:ring-black/5 transition-all" />
+              <div className="absolute bottom-[110%] left-[0px] mb-5 w-[calc(100vw-32px)] max-w-[320px] bg-white/95 backdrop-blur-3xl rounded-[32px] shadow-[0_20px_40px_-12px_rgba(0,0,0,0.3)] border border-white/60 p-6 animate-in slide-in-from-bottom-3 fade-in duration-300 z-[300]" onClick={e => e.stopPropagation()}>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-sm font-black text-gray-800 tracking-tight flex items-center gap-2">
+                      <Layout size={16} /> 编辑概览
+                    </h3>
+                    <button onClick={() => setShowConfig(false)} className="text-gray-400"><X size={16}/></button>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1">年份</label>
-                      <input value={data.year} onChange={e => setData({...data, year: e.target.value})} className="w-full bg-black/5 px-4 py-3 rounded-2xl text-xs font-mono font-black outline-none focus:bg-white focus:ring-2 focus:ring-black/5 transition-all" />
+                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1">标题</label>
+                      <input value={data.mainTitle} onChange={e => updateDataField('mainTitle', e.target.value)} className="w-full bg-black/5 px-4 py-3 rounded-2xl text-xs font-serif font-black outline-none focus:bg-white transition-all" />
                     </div>
                     <div className="space-y-1">
                       <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1">作者</label>
-                      <input value={data.author} onChange={e => setData({...data, author: e.target.value})} className="w-full bg-black/5 px-4 py-3 rounded-2xl text-xs font-black outline-none focus:bg-white focus:ring-2 focus:ring-black/5 transition-all" />
+                      <input value={data.author} onChange={e => updateDataField('author', e.target.value)} className="w-full bg-black/5 px-4 py-3 rounded-2xl text-xs font-black outline-none focus:bg-white transition-all" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1">类型</label>
+                      <input value={data.summaryType} onChange={e => updateDataField('summaryType', e.target.value)} className="w-full bg-black/5 px-4 py-3 rounded-2xl text-xs font-bold outline-none focus:bg-white transition-all" />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1">年份</label>
+                      <input value={data.year} onChange={e => updateDataField('year', e.target.value)} className="w-full bg-black/5 px-4 py-3 rounded-2xl text-xs font-mono font-black outline-none focus:bg-white transition-all" />
                     </div>
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1">总结类型</label>
-                    <input value={data.summaryType} onChange={e => setData({...data, summaryType: e.target.value})} className="w-full bg-black/5 px-4 py-3 rounded-2xl text-xs font-bold outline-none focus:bg-white focus:ring-2 focus:ring-black/5 transition-all" />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1">范例 / 前言</label>
-                    <textarea value={data.intro} onChange={e => setData({...data, intro: e.target.value})} className="w-full bg-black/5 px-4 py-3 rounded-2xl text-[10px] font-serif font-medium outline-none focus:bg-white focus:ring-2 focus:ring-black/5 transition-all min-h-[80px] resize-none" />
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1">范例</label>
+                    <textarea value={data.intro} onChange={e => updateDataField('intro', e.target.value)} className="w-full bg-black/5 px-4 py-3 rounded-2xl text-[11px] font-serif font-medium outline-none focus:bg-white transition-all min-h-[100px] leading-relaxed resize-none" placeholder="填写范例或总结前言..." />
                   </div>
                 </div>
               </div>
             )}
-            <button onClick={(e) => { e.stopPropagation(); setShowConfig(!showConfig); setShowTagManager(false); setShowThemePicker(false); setShowExportMenu(false); }} className={`flex flex-col items-center gap-0.5 transition-colors ${showConfig ? 'text-black' : 'text-black/40'} active:scale-100`}>
+            <button onClick={(e) => { e.stopPropagation(); setShowConfig(!showConfig); setShowTagManager(false); setShowThemePicker(false); setShowExportMenu(false); }} className={`flex flex-col items-center gap-0.5 transition-colors ${showConfig ? 'text-black' : 'text-black/40'}`}>
               <Settings2 size={20} />
               <span className="text-[10px] font-bold">设定</span>
             </button>
@@ -831,73 +824,75 @@ const App = () => {
 
           <div className="relative">
             {showTagManager && (
-              <div className="absolute bottom-[110%] left-[-20px] mb-5 w-[calc(100vw-32px)] max-w-72 bg-white/95 backdrop-blur-3xl rounded-[32px] shadow-[0_20px_40px_-12px_rgba(0,0,0,0.3)] border border-white/60 p-6 animate-in slide-in-from-bottom-3 fade-in duration-300 z-[300] max-h-[420px] overflow-y-auto no-scrollbar" onClick={e => e.stopPropagation()}>
-                <div className="space-y-6">
+              <div className="absolute bottom-[110%] left-[-20px] mb-5 w-[calc(100vw-32px)] max-w-[300px] bg-white/95 backdrop-blur-3xl rounded-[32px] shadow-[0_20px_40px_-12px_rgba(0,0,0,0.3)] border border-white/60 p-6 animate-in slide-in-from-bottom-3 fade-in duration-300 z-[300]" onClick={e => e.stopPropagation()}>
+                <div className="space-y-5">
                   <h3 className="text-sm font-black text-gray-800 tracking-tight flex items-center gap-2 mb-2">
-                    <Tags size={16} /> 标签管理
+                    <Tags size={16} /> 标签库管理
                   </h3>
-                  <div className="space-y-4">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1">分类目录</label>
-                    <div className="flex flex-wrap gap-2">
-                      {data.savedCategories.map((cat, i) => (
-                        <div key={i} className="flex items-center gap-1.5 bg-black/5 px-3 py-1.5 rounded-full text-[10px] font-black">
-                          {cat}
-                          <button onClick={() => setData(prev => ({...prev, savedCategories: prev.savedCategories.filter(c => c !== cat)}))} className="text-gray-400 hover:text-red-500 transition-colors"><X size={10} /></button>
-                        </div>
-                      ))}
+                  <div className="space-y-4 max-h-[300px] overflow-y-auto no-scrollbar">
+                    <div className="space-y-2">
+                      <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest pl-1">分类管理</label>
+                      <div className="flex flex-wrap gap-2">
+                        {data.savedCategories.map((cat, i) => (
+                          <div key={i} className="flex items-center gap-1.5 bg-black/5 px-3 py-1.5 rounded-full text-[10px] font-black">
+                            {cat}
+                            <button onClick={() => setData(prev => ({...prev, savedCategories: prev.savedCategories.filter(c => c !== cat)}))} className="text-gray-400 hover:text-red-500"><X size={10} /></button>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="flex gap-2">
+                        <input value={newCatInput} onChange={e => setNewCatInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && addCategory()} placeholder="新分类" className="flex-1 bg-black/5 rounded-xl px-4 py-2.5 text-[10px] font-bold outline-none focus:bg-white transition-all" />
+                        <button onClick={addCategory} className="bg-black text-white px-3 rounded-xl active:scale-90 transition-transform"><Plus size={14} /></button>
+                      </div>
                     </div>
-                    <div className="flex gap-2">
-                      <input value={newCatInput} onChange={e => setNewCatInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && addCategory()} placeholder="输入新分类..." className="flex-1 bg-black/5 rounded-2xl px-4 py-3 text-[10px] font-bold outline-none focus:bg-white focus:ring-2 focus:ring-black/5 transition-all" />
-                      <button onClick={addCategory} className="bg-black text-white px-3 rounded-2xl active:scale-90 transition-transform"><Plus size={16} /></button>
-                    </div>
-                  </div>
-                  <div className="h-[1px] bg-black/5" />
-                  <div className="space-y-4">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1">副标题标记</label>
-                    <div className="flex flex-wrap gap-2">
-                      {data.savedTypes.map((t, i) => (
-                        <div key={i} className="flex items-center gap-1.5 bg-black/5 px-3 py-1.5 rounded-full text-[10px] font-black italic">
-                          {t}
-                          <button onClick={() => setData(prev => ({...prev, savedTypes: prev.savedTypes.filter(st => st !== t)}))} className="text-gray-400 hover:text-red-500 transition-colors not-italic"><X size={10} /></button>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="flex gap-2">
-                      <input value={newTypeInput} onChange={e => setNewTypeInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && addType()} placeholder="输入新标记..." className="flex-1 bg-black/5 rounded-2xl px-4 py-3 text-[10px] font-bold italic outline-none focus:bg-white focus:ring-2 focus:ring-black/5 transition-all" />
-                      <button onClick={addType} className="bg-black text-white px-3 rounded-2xl active:scale-90 transition-transform"><Plus size={16} /></button>
+                    <div className="h-[1px] bg-black/5" />
+                    <div className="space-y-2">
+                      <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest pl-1">标记管理</label>
+                      <div className="flex flex-wrap gap-2">
+                        {data.savedTypes.map((t, i) => (
+                          <div key={i} className="flex items-center gap-1.5 bg-black/5 px-3 py-1.5 rounded-full text-[10px] font-black italic">
+                            {t}
+                            <button onClick={() => setData(prev => ({...prev, savedTypes: prev.savedTypes.filter(st => st !== t)}))} className="text-gray-400 hover:text-red-500"><X size={10} /></button>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="flex gap-2">
+                        <input value={newTypeInput} onChange={e => setNewTypeInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && addType()} placeholder="新标记" className="flex-1 bg-black/5 rounded-xl px-4 py-2.5 text-[10px] font-bold outline-none focus:bg-white transition-all" />
+                        <button onClick={addType} className="bg-black text-white px-3 rounded-xl active:scale-90 transition-transform"><Plus size={14} /></button>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             )}
-            <button onClick={(e) => { e.stopPropagation(); setShowTagManager(!showTagManager); setShowConfig(false); setShowThemePicker(false); setShowExportMenu(false); }} className={`flex flex-col items-center gap-0.5 transition-colors ${showTagManager ? 'text-black' : 'text-black/40'} active:scale-100`}>
+            <button onClick={(e) => { e.stopPropagation(); setShowTagManager(!showTagManager); setShowConfig(false); setShowThemePicker(false); setShowExportMenu(false); }} className={`flex flex-col items-center gap-0.5 transition-colors ${showTagManager ? 'text-black' : 'text-black/40'}`}>
               <Tags size={20} />
               <span className="text-[10px] font-bold">标签</span>
             </button>
           </div>
 
-          <button onClick={(e) => { e.stopPropagation(); addNewItem(); }} className="w-10 h-10 bg-[#1A1A1A] rounded-full flex items-center justify-center text-white active:scale-100 shadow-xl shrink-0">
-            <Plus size={20} strokeWidth={3} />
+          <button onClick={(e) => { e.stopPropagation(); addNewItem(); }} className="w-12 h-12 bg-[#1A1A1A] rounded-full flex items-center justify-center text-white active:scale-90 shadow-xl shrink-0 transition-transform">
+            <Plus size={24} strokeWidth={3} />
           </button>
 
           <div className="relative">
             {showThemePicker && (
               <div className="absolute bottom-[110%] left-1/2 -translate-x-1/2 mb-5 w-36 bg-white/95 backdrop-blur-3xl rounded-[24px] shadow-[0_20px_40px_-12px_rgba(0,0,0,0.3)] border border-white/60 p-2 animate-in slide-in-from-bottom-3 fade-in duration-300 z-[300]" onClick={e => e.stopPropagation()}>
-                <div className="flex flex-col gap-1.5">
+                <div className="flex flex-col gap-1">
                   {THEMES.map(t => (
                     <button 
                       key={t.id} 
                       onClick={() => { setData({...data, themeId: t.id}); setShowThemePicker(false); }} 
                       className={`flex items-center gap-3 p-2.5 rounded-2xl transition-all ${data.themeId === t.id ? 'bg-black/5' : 'hover:bg-black/[0.03]'}`}
                     >
-                      <div className="w-5 h-5 rounded-full border border-black/5 shadow-inner shrink-0" style={{ backgroundColor: t.accent }}></div>
-                      <span className={`text-[11px] font-black whitespace-nowrap ${data.themeId === t.id ? 'text-black' : 'text-gray-400'}`}>{t.name}</span>
+                      <div className="w-5 h-5 rounded-full border border-black/5 shadow-inner" style={{ backgroundColor: t.accent }}></div>
+                      <span className={`text-[11px] font-black ${data.themeId === t.id ? 'text-black' : 'text-gray-400'}`}>{t.name}</span>
                     </button>
                   ))}
                 </div>
               </div>
             )}
-            <button onClick={(e) => { e.stopPropagation(); setShowThemePicker(!showThemePicker); setShowConfig(false); setShowTagManager(false); setShowExportMenu(false); }} className={`flex flex-col items-center gap-0.5 transition-colors ${showThemePicker ? 'text-black' : 'text-black/40'} active:scale-100`}>
+            <button onClick={(e) => { e.stopPropagation(); setShowThemePicker(!showThemePicker); setShowConfig(false); setShowTagManager(false); setShowExportMenu(false); }} className={`flex flex-col items-center gap-0.5 transition-colors ${showThemePicker ? 'text-black' : 'text-black/40'}`}>
               <Palette size={20} />
               <span className="text-[10px] font-bold">主题</span>
             </button>
@@ -905,54 +900,43 @@ const App = () => {
           
           <div className="relative">
             {showExportMenu && (
-              <div className="absolute bottom-[110%] right-[0px] mb-5 w-24 bg-white/95 backdrop-blur-3xl rounded-[32px] shadow-[0_20px_40px_-12px_rgba(0,0,0,0.3)] border border-white/60 p-1.5 animate-in slide-in-from-bottom-3 fade-in duration-300 z-[300]" onClick={e => e.stopPropagation()}>
+              <div className="absolute bottom-[110%] right-[0px] mb-5 w-32 bg-white/95 backdrop-blur-3xl rounded-[32px] shadow-[0_20px_40px_-12px_rgba(0,0,0,0.3)] border border-white/60 p-2 animate-in slide-in-from-bottom-3 fade-in duration-300 z-[300]" onClick={e => e.stopPropagation()}>
                 {exportSubMode === 'main' ? (
                   <div className="flex flex-col gap-1">
-                    <button onClick={handleExportLong} className="flex flex-col items-center gap-1 p-2.5 hover:bg-black/5 rounded-2xl transition-all group border-b border-black/5 pb-2.5">
-                      <div className="w-8 h-8 bg-black/5 rounded-lg flex items-center justify-center group-active:scale-90 transition-transform">
-                        <Layers size={16} />
-                      </div>
-                      <span className="font-black text-[8px] uppercase tracking-tighter text-gray-800 text-center">完整长图</span>
+                    <button onClick={handleExportLong} className="flex flex-col items-center gap-1 p-3 hover:bg-black/5 rounded-2xl transition-all group border-b border-black/5 pb-3">
+                      <Layers size={18} />
+                      <span className="font-black text-[9px] uppercase tracking-tighter text-gray-800">完整长图</span>
                     </button>
-                    <button onClick={() => setExportSubMode('select')} className="flex flex-col items-center gap-1 p-2.5 hover:bg-black/5 rounded-2xl transition-all group border-b border-black/5 pb-2.5">
-                      <div className="w-8 h-8 bg-black/5 rounded-lg flex items-center justify-center group-active:scale-90 transition-transform">
-                        <CheckSquare size={16} />
-                      </div>
-                      <span className="font-black text-[8px] uppercase tracking-tighter text-gray-800 text-center">勾选导出</span>
-                    </button>
-                    <button onClick={handleExportAllPages} className="flex flex-col items-center gap-1 p-2.5 hover:bg-black/5 rounded-2xl transition-all group">
-                      <div className="w-8 h-8 bg-black/5 rounded-lg flex items-center justify-center group-active:scale-90 transition-transform">
-                        <FileText size={16} />
-                      </div>
-                      <span className="font-black text-[8px] uppercase tracking-tighter text-gray-800 text-center">批量单页</span>
+                    <button onClick={() => setExportSubMode('select')} className="flex flex-col items-center gap-1 p-3 hover:bg-black/5 rounded-2xl transition-all group">
+                      <CheckSquare size={18} />
+                      <span className="font-black text-[9px] uppercase tracking-tighter text-gray-800">勾选导出</span>
                     </button>
                   </div>
                 ) : (
-                  <div className="p-1 flex flex-col gap-3 min-h-[260px]">
-                    <div className="flex items-center justify-between px-1 mt-1">
+                  <div className="p-1 flex flex-col gap-3 min-h-[220px]">
+                    <div className="flex items-center justify-between px-1">
                       <button onClick={() => setExportSubMode('main')} className="text-gray-400"><ChevronLeft size={14} /></button>
-                      <span className="text-[8px] font-black text-black">({selectedItemIds.length})</span>
+                      <span className="text-[9px] font-black">({selectedItemIds.length})</span>
                       <button onClick={() => setSelectedItemIds(selectedItemIds.length === data.items.length ? [] : data.items.map(i => i.id))} className="text-[7px] font-black uppercase underline">全选</button>
                     </div>
-                    <div className="grid grid-cols-2 gap-1 overflow-y-auto no-scrollbar max-h-40 py-1">
+                    <div className="grid grid-cols-2 gap-1 overflow-y-auto no-scrollbar max-h-32 py-1">
                       {data.items.map((item, i) => {
                         const isSelected = selectedItemIds.includes(item.id);
                         return (
-                          <button key={item.id} onClick={() => toggleItemSelection(item.id)} className={`h-8 rounded-lg font-mono font-black text-[8px] transition-all border ${isSelected ? 'bg-black border-black text-white' : 'bg-gray-50 border-gray-100 text-gray-400'}`}>
+                          <button key={item.id} onClick={() => toggleItemSelection(item.id)} className={`h-8 rounded-lg font-mono font-black text-[9px] transition-all border ${isSelected ? 'bg-black border-black text-white' : 'bg-gray-50 border-gray-100 text-gray-400'}`}>
                             {String(i + 1).padStart(2, '0')}
                           </button>
                         );
                       })}
                     </div>
-                    <button onClick={handleExportSelectedPreview} className="w-full bg-black text-white py-3 rounded-lg font-black text-[8px] tracking-widest uppercase flex items-center justify-center gap-1 active:scale-95 transition-transform mt-auto mb-1">
+                    <button onClick={handleExportSelectedPreview} className="w-full bg-black text-white py-3 rounded-xl font-black text-[9px] tracking-widest uppercase flex items-center justify-center gap-1 active:scale-95 transition-transform mt-auto">
                       导出 <ArrowRight size={8} />
                     </button>
                   </div>
                 )}
               </div>
             )}
-            
-            <button onClick={(e) => { e.stopPropagation(); setShowExportMenu(!showExportMenu); if(!showExportMenu) { setExportSubMode('main'); setSelectedItemIds([]); } setShowThemePicker(false); setShowConfig(false); setShowTagManager(false); }} disabled={isExporting} className={`flex flex-col items-center gap-0.5 transition-colors ${showExportMenu ? 'text-black' : 'text-black/40'} active:scale-100`}>
+            <button onClick={(e) => { e.stopPropagation(); setShowExportMenu(!showExportMenu); if(!showExportMenu) { setExportSubMode('main'); setSelectedItemIds([]); } setShowThemePicker(false); setShowConfig(false); setShowTagManager(false); }} disabled={isExporting} className={`flex flex-col items-center gap-0.5 transition-colors ${showExportMenu ? 'text-black' : 'text-black/40'}`}>
               {isExporting ? <Loader2 size={20} className="animate-spin" /> : <Send size={20} />}
               <span className="text-[10px] font-bold">发布</span>
             </button>
@@ -969,7 +953,7 @@ const App = () => {
                <div className="w-40 h-1.5 bg-gray-100 rounded-full overflow-hidden">
                  <div className="h-full bg-black transition-all duration-300" style={{ width: `${exportProgress}%` }}></div>
                </div>
-               <p className="text-[10px] text-gray-400 mt-2">处理高清长图可能需要一点时间</p>
+               <p className="text-[10px] text-gray-400 mt-2">处理高清长图需要一点时间</p>
              </div>
            </div>
         </div>
@@ -979,23 +963,20 @@ const App = () => {
         <div className="fixed inset-0 z-[600] flex flex-col" style={{ backgroundColor: currentTheme.bg }}>
           <div className="h-16 flex items-center justify-between px-6 bg-white/40 backdrop-blur-2xl shrink-0 border-b border-black/5">
             <button onClick={() => setIsPreviewing(false)} className="font-bold flex items-center gap-2" style={{ color: currentTheme.text }}><ChevronLeft size={20} /> 返回</button>
-            <div className="flex gap-2">
-              <span className="bg-black/5 px-4 py-2 rounded-full text-[10px] font-black" style={{ color: currentTheme.text }}>{previewUrls.length} 页已就绪</span>
-              <button 
-                onClick={() => {
-                  previewUrls.forEach((url, i) => {
-                    const link = document.createElement('a');
-                    link.download = `年度记录_${data.year}_${i+1}.png`;
-                    link.href = url;
-                    link.click();
-                  });
-                }} 
-                className="text-white px-5 py-2 rounded-full font-black text-[11px] shadow-lg active:scale-95 transition-transform" 
-                style={{ backgroundColor: currentTheme.accent }}
-              >
-                保存全部
-              </button>
-            </div>
+            <button 
+              onClick={() => {
+                previewUrls.forEach((url, i) => {
+                  const link = document.createElement('a');
+                  link.download = `年度总结_${data.year}_${i+1}.png`;
+                  link.href = url;
+                  link.click();
+                });
+              }} 
+              className="text-white px-5 py-2 rounded-full font-black text-[11px] shadow-lg active:scale-95 transition-transform" 
+              style={{ backgroundColor: currentTheme.accent }}
+            >
+              保存图片
+            </button>
           </div>
           <div className="flex-1 overflow-y-auto no-scrollbar p-6 space-y-12 pb-32">
             {previewUrls.map((url, i) => (
