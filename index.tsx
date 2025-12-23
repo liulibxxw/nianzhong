@@ -205,7 +205,7 @@ const App = () => {
     const text = e.clipboardData.getData('text/plain');
     if (!text) return;
 
-    // 插入文本
+    // 插入纯文本
     document.execCommand('insertText', false, text);
     
     // 强制立即同步到状态，防止 ResizeObserver 触发的重绘导致 DOM 内容被旧状态覆盖
@@ -442,7 +442,7 @@ const App = () => {
       <div className="absolute inset-0 opacity-[0.2] pointer-events-none" style={{ backgroundImage: TEXTURE_URL, backgroundSize: '64px 64px' }}></div>
       
       <div className="w-full flex flex-col mb-[20px] relative z-10 shrink-0">
-        <div className="flex justify-between items-end border-b-[4px] border-current pb-8 mb-[20px]" style={{ color: currentTheme.text }}>
+        <div className="flex justify-between items-end border-b-[4px] border-current pb-8 mb-[60px]" style={{ color: currentTheme.text }}>
           <div className="flex flex-col">
             <span contentEditable={!isExport} suppressContentEditableWarning onBlur={(e) => updateDataField('summaryType', e.currentTarget.innerHTML)} className={`font-serif text-[32px] tracking-[0.2em] font-black outline-none`}>
               {data.summaryType}
@@ -588,7 +588,6 @@ const App = () => {
                   contentEditable={!isExport} 
                   suppressContentEditableWarning 
                   onInput={(e) => {
-                    // 即时同步状态，防止由于 ResizeObserver 导致的重绘抹除未保存的 DOM 修改
                     updateItemField(item.id, 'content', e.currentTarget.innerHTML);
                   }}
                   onPaste={(e) => handlePaste(item.id, 'content', e)}
