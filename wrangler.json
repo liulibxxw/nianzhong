@@ -4,6 +4,6 @@
         "compatibility_date": "2025-03-01",
           "pages_build_config": {
               "build_command": "npm run build",
-                  "destination_dir": "dist"
+                  "directory": "./dist"
                     }
                     }
