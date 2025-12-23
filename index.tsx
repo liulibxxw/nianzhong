@@ -26,8 +26,7 @@ import {
   Type, 
   Palette, 
   Search,
-  Tags,
-  BookOpen
+  Tags
 } from 'lucide-react';
 import domtoimage from 'dom-to-image-more';
 
@@ -71,30 +70,6 @@ const THEMES: ThemeConfig[] = [
   { id: 'azure', name: '远洋蓝', bg: '#EBF4FF', accent: '#2B6CB0', text: '#1A202C', secondary: '#718096', card: 'rgba(255,255,255,0.6)' }
 ];
 
-const SUMMARY_TEMPLATES = [
-  {
-    title: '职场飞跃',
-    type: 'WORK',
-    category: '职业发展',
-    content: '这一年，我在多个核心项目中担任重要角色，不仅提升了技术深度，更在跨部门协作中找到了价值。文字不足以记录每一次通宵达旦，但结果见证了成长。',
-    thoughts: '成长的过程总是伴随着阵痛，但站在年终回望，那些挑战都变成了基石。'
-  },
-  {
-    title: '生活记录',
-    type: 'LIFE',
-    category: '日常琐碎',
-    content: '走过了三座城市，拍了上千张照片。开始学着与自己和解，在平凡的餐食与四季更替中，找回了对生活最初的热爱。',
-    thoughts: '慢下来，是为了更好地出发。明年的目标是去更远的地方看海。'
-  },
-  {
-    title: '技能精进',
-    type: 'STUDY',
-    category: '自我提升',
-    content: '完成了3门在线课程，阅读了12本书籍。知识的积累就像是复利，虽然短期看不出变化，但思维的广度已经在不经意间被拓宽。',
-    thoughts: '保持好奇，是抵御平庸的唯一武器。'
-  }
-];
-
 const COLOR_PRESETS = [
   '#000000', '#C53030', '#3E6B5D', '#2B6CB0', '#D4A373', '#718096', '#9B2C2C', '#FFFFFF'
 ];
@@ -103,22 +78,22 @@ const TEXTURE_URL = `url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAy
 
 const App = () => {
   const [data, setData] = useState<SummaryData>({
-    mainTitle: '年度回忆录',
-    author: '作者名',
+    mainTitle: '衔书又止',
+    author: '琉璃',
     year: '2025',
     wordCount: '0',
-    intro: '人类总喜欢给万物下定义，好像不说清楚我是谁、你是什么，第二天太阳就不会升起来一样。',
-    summaryType: '年度总结',
+    intro: '人类总喜欢给万物下定义，好像不说清楚我是谁、你是什么，第二天太阳就不会升起来一样',
+    summaryType: '彩云易散琉璃脆',
     themeId: 'rose',
-    savedCategories: ['职业发展', '日常琐碎', '自我提升', '灵感闪现'],
-    savedTypes: ['WORK', 'LIFE', 'TAG', 'STORY'],
+    savedCategories: [],
+    savedTypes: [],
     items: [
       {
         id: 'init-1',
         title: '岁末起始',
         date: '2025.01.01',
-        category: '灵感闪现',
-        type: 'STORY',
+        category: '未分类',
+        type: 'TAG',
         content: '这是一个新篇章的开始。文字是时间的锚点，记录下这些琐碎，便是留住了流沙。',
         thoughts: '当时写下这段话的时候，窗外正下着小雨。有些感慨，但也对未来充满期待。'
       }
@@ -128,7 +103,6 @@ const App = () => {
   const [showConfig, setShowConfig] = useState(false);
   const [showTagManager, setShowTagManager] = useState(false);
   const [showThemePicker, setShowThemePicker] = useState(false);
-  const [showExamples, setShowExamples] = useState(false);
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [exportSubMode, setExportSubMode] = useState<'main' | 'select'>('main');
   const [newCatInput, setNewCatInput] = useState('');
@@ -192,15 +166,15 @@ const App = () => {
     }
   };
 
-  const addNewItem = (template?: typeof SUMMARY_TEMPLATES[0]) => {
+  const addNewItem = () => {
     const newItem: SummaryItem = {
       id: Date.now().toString(),
-      title: template?.title || '点击编辑标题',
+      title: '点击编辑标题',
       date: new Date().toISOString().split('T')[0].replace(/-/g, '.'),
-      category: template?.category || data.savedCategories[0] || '未分类',
-      type: template?.type || data.savedTypes[0] || 'TAG',
-      content: template?.content || '点击这里开始记录你的故事...',
-      thoughts: template?.thoughts || '写下关于这条记录的个人感悟...'
+      category: data.savedCategories[0] || '未分类',
+      type: data.savedTypes[0] || 'TAG',
+      content: '点击这里开始记录你的故事...',
+      thoughts: '写下关于这条记录的个人感悟...'
     };
     setData(prev => ({ ...prev, items: [...prev.items, newItem] }));
     setTimeout(() => {
@@ -665,7 +639,6 @@ const App = () => {
     setShowTagManager(false);
     setShowFontSizeSlider(false);
     setShowColorPicker(false);
-    setShowExamples(false);
   };
 
   return (
@@ -836,7 +809,7 @@ const App = () => {
                 </div>
               </div>
             )}
-            <button onClick={(e) => { e.stopPropagation(); setShowConfig(!showConfig); setShowTagManager(false); setShowThemePicker(false); setShowExportMenu(false); setShowExamples(false); }} className={`flex flex-col items-center gap-0.5 transition-colors ${showConfig ? 'text-black' : 'text-black/40'} active:scale-100`}>
+            <button onClick={(e) => { e.stopPropagation(); setShowConfig(!showConfig); setShowTagManager(false); setShowThemePicker(false); setShowExportMenu(false); }} className={`flex flex-col items-center gap-0.5 transition-colors ${showConfig ? 'text-black' : 'text-black/40'} active:scale-100`}>
               <Settings2 size={20} />
               <span className="text-[10px] font-bold">设定</span>
             </button>
@@ -883,7 +856,7 @@ const App = () => {
                 </div>
               </div>
             )}
-            <button onClick={(e) => { e.stopPropagation(); setShowTagManager(!showTagManager); setShowConfig(false); setShowThemePicker(false); setShowExportMenu(false); setShowExamples(false); }} className={`flex flex-col items-center gap-0.5 transition-colors ${showTagManager ? 'text-black' : 'text-black/40'} active:scale-100`}>
+            <button onClick={(e) => { e.stopPropagation(); setShowTagManager(!showTagManager); setShowConfig(false); setShowThemePicker(false); setShowExportMenu(false); }} className={`flex flex-col items-center gap-0.5 transition-colors ${showTagManager ? 'text-black' : 'text-black/40'} active:scale-100`}>
               <Tags size={20} />
               <span className="text-[10px] font-bold">标签</span>
             </button>
@@ -892,37 +865,6 @@ const App = () => {
           <button onClick={(e) => { e.stopPropagation(); addNewItem(); }} className="w-10 h-10 bg-[#1A1A1A] rounded-full flex items-center justify-center text-white active:scale-100 shadow-xl shrink-0">
             <Plus size={20} strokeWidth={3} />
           </button>
-
-          <div className="relative">
-             {showExamples && (
-                <div className="absolute bottom-[110%] left-[-40px] mb-5 w-[calc(100vw-32px)] max-w-72 bg-white/95 backdrop-blur-3xl rounded-[32px] shadow-[0_20px_40px_-12px_rgba(0,0,0,0.3)] border border-white/60 p-6 animate-in slide-in-from-bottom-3 fade-in duration-300 z-[300]" onClick={e => e.stopPropagation()}>
-                  <div className="space-y-4">
-                    <h3 className="text-sm font-black text-gray-800 tracking-tight flex items-center gap-2 mb-2">
-                      <BookOpen size={16} /> 范例库
-                    </h3>
-                    <div className="flex flex-col gap-3">
-                      {SUMMARY_TEMPLATES.map((tmpl, idx) => (
-                        <button 
-                          key={idx}
-                          onClick={() => { addNewItem(tmpl); setShowExamples(false); }}
-                          className="w-full text-left p-4 rounded-2xl bg-black/5 hover:bg-black/10 transition-colors group"
-                        >
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="text-[11px] font-black text-gray-800">{tmpl.title}</span>
-                            <span className="text-[8px] font-bold px-2 py-0.5 bg-black/10 rounded-full text-gray-500 uppercase tracking-widest">{tmpl.type}</span>
-                          </div>
-                          <p className="text-[10px] text-gray-400 line-clamp-2 leading-relaxed">{tmpl.content}</p>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-             )}
-            <button onClick={(e) => { e.stopPropagation(); setShowExamples(!showExamples); setShowConfig(false); setShowTagManager(false); setShowThemePicker(false); setShowExportMenu(false); }} className={`flex flex-col items-center gap-0.5 transition-colors ${showExamples ? 'text-black' : 'text-black/40'} active:scale-100`}>
-              <BookOpen size={20} />
-              <span className="text-[10px] font-bold">范例</span>
-            </button>
-          </div>
 
           <div className="relative">
             {showThemePicker && (
@@ -941,7 +883,7 @@ const App = () => {
                 </div>
               </div>
             )}
-            <button onClick={(e) => { e.stopPropagation(); setShowThemePicker(!showThemePicker); setShowConfig(false); setShowTagManager(false); setShowExportMenu(false); setShowExamples(false); }} className={`flex flex-col items-center gap-0.5 transition-colors ${showThemePicker ? 'text-black' : 'text-black/40'} active:scale-100`}>
+            <button onClick={(e) => { e.stopPropagation(); setShowThemePicker(!showThemePicker); setShowConfig(false); setShowTagManager(false); setShowExportMenu(false); }} className={`flex flex-col items-center gap-0.5 transition-colors ${showThemePicker ? 'text-black' : 'text-black/40'} active:scale-100`}>
               <Palette size={20} />
               <span className="text-[10px] font-bold">主题</span>
             </button>
@@ -996,7 +938,7 @@ const App = () => {
               </div>
             )}
             
-            <button onClick={(e) => { e.stopPropagation(); setShowExportMenu(!showExportMenu); if(!showExportMenu) { setExportSubMode('main'); setSelectedItemIds([]); } setShowThemePicker(false); setShowConfig(false); setShowTagManager(false); setShowExamples(false); }} disabled={isExporting} className={`flex flex-col items-center gap-0.5 transition-colors ${showExportMenu ? 'text-black' : 'text-black/40'} active:scale-100`}>
+            <button onClick={(e) => { e.stopPropagation(); setShowExportMenu(!showExportMenu); if(!showExportMenu) { setExportSubMode('main'); setSelectedItemIds([]); } setShowThemePicker(false); setShowConfig(false); setShowTagManager(false); }} disabled={isExporting} className={`flex flex-col items-center gap-0.5 transition-colors ${showExportMenu ? 'text-black' : 'text-black/40'} active:scale-100`}>
               {isExporting ? <Loader2 size={20} className="animate-spin" /> : <Send size={20} />}
               <span className="text-[10px] font-bold">发布</span>
             </button>
