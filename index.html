@@ -7,13 +7,20 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Noto+Serif+SC:wght@400;700;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/index.css">
+    <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Noto+Serif+SC:wght@400;700;900&display=swap" rel="stylesheet" crossorigin="anonymous">
     <style>
       :root {
         --font-serif: 'Playfair Display', 'Noto Serif SC', serif;
         --font-mono: 'JetBrains Mono', monospace;
+        --primary-bg: #E8E4DF;
       }
+
+      /* 全局重置 */
+      * {
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+      }
+
       body {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         -webkit-font-smoothing: antialiased;
@@ -22,10 +29,18 @@
         margin: 0;
         padding: 0;
         overflow: hidden;
-        background: #E8E4DF;
+        background: var(--primary-bg);
         height: 100vh;
         width: 100vw;
+        user-select: none;
       }
+
+      /* 允许可编辑区域进行文本选择 */
+      [contenteditable="true"] {
+        user-select: text !important;
+        -webkit-user-select: text !important;
+      }
+
       .font-serif { font-family: var(--font-serif); }
       .font-mono { font-family: var(--font-mono); }
       
@@ -48,6 +63,27 @@
         display: flex;
         flex-direction: column;
       }
+
+      /* 按钮点击态 */
+      button:active {
+        transform: scale(0.96);
+        transition: transform 0.1s ease;
+      }
+
+      /* 输入框聚焦效果 */
+      input:focus, textarea:focus {
+        background-color: #fff !important;
+        box-shadow: 0 0 0 2px rgba(0,0,0,0.05);
+      }
+
+      /* 自定义选择框样式 */
+      select {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 1rem center;
+        background-size: 1.2rem;
+      }
     </style>
 <script type="importmap">
 {
@@ -55,7 +91,7 @@
     "react": "https://esm.sh/react@^19.2.3",
     "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
     "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
-    "dom-to-image-more": "https://esm.sh/dom-to-image-more@^3.7.2",
+    "html-to-image": "https://esm.sh/html-to-image@^1.11.11",
     "react/": "https://esm.sh/react@^19.2.3/",
     "path": "https://esm.sh/path@^0.12.7",
     "url": "https://esm.sh/url@^0.11.4",
@@ -64,9 +100,11 @@
   }
 }
 </script>
+<link rel="stylesheet" href="/index.css">
 </head>
 <body>
     <div id="root"></div>
-    <script type="module" src="/index.tsx"></script>
+    <script type="module" src="index.tsx"></script>
+<script type="module" src="/index.tsx"></script>
 </body>
 </html>

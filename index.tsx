@@ -29,7 +29,7 @@ import {
   Tags,
   Layout
 } from 'lucide-react';
-import domtoimage from 'dom-to-image-more';
+import * as htmlToImage from 'html-to-image';
 
 interface SummaryItem {
   id: string;
@@ -75,13 +75,16 @@ const COLOR_PRESETS = [
   '#000000', '#C53030', '#3E6B5D', '#2B6CB0', '#D4A373', '#718096', '#9B2C2C', '#FFFFFF'
 ];
 
-const TEXTURE_URL = `url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAMAAAAp4XiDAAAAUVBMVEWFhYWDg4N3dyZlZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZiZ6Np9LAAAAFnRSTlMAp79vj6uXm59/f39/f39/f39/f39/f398C9mBAAAAelURBVDjL7ZFBCsAwDMNisv//766mS7vtoYORXAiBhC8m8mIyLybyYiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJi8m/mBfNNCFmS0XyXAAAAAElFTkSuQmCC")`;
+const TEXTURE_URL = `url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAMAAAAp4XiDAAAAUVBMVEWFhYWDg4N3dyZlZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZiZ6Np9LAAAAFnRSTlMAp79vj6uXm59/f39/f39/f39/f39/f398C9mBAAAAelURBVDjL7ZFBCsAwDMNisv//766mS7vtoYORXAiBhC8m8mIyLybyYiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJi8m/mBfNNCFmS0XyXAAAAAElFTkSuQmCC")`;
+
+const DEFAULT_TEXT = '';
+const GET_CURRENT_DATE = () => new Date().toISOString().split('T')[0].replace(/-/g, '.');
 
 const App = () => {
   const [data, setData] = useState<SummaryData>({
     mainTitle: '衔书又止',
     author: '琉璃',
-    year: '2025',
+    year: new Date().getFullYear().toString(),
     wordCount: '0',
     intro: '人类总喜欢给万物下定义，好像不说清楚我是谁、你是什么，第二天太阳就不会升起来一样',
     summaryType: '彩云易散琉璃脆',
@@ -91,12 +94,12 @@ const App = () => {
     items: [
       {
         id: 'init-1',
-        title: '岁末起始',
-        date: '2025.01.01',
+        title: '',
+        date: GET_CURRENT_DATE(),
         category: '未分类',
         type: '无',
-        content: '这是一个新篇章的开始。文字是时间的锚点，记录下这些琐碎，便是留住了流沙。',
-        thoughts: '当时写下这段话的时候，窗外正下着小雨。有些感慨，但也对未来充满期待。'
+        content: DEFAULT_TEXT,
+        thoughts: DEFAULT_TEXT
       }
     ]
   });
@@ -105,7 +108,7 @@ const App = () => {
   const [showTagManager, setShowTagManager] = useState(false);
   const [showThemePicker, setShowThemePicker] = useState(false);
   const [showExportMenu, setShowExportMenu] = useState(false);
-  const [exportSubMode, setExportSubMode] = useState<'main' | 'select'>('main');
+  const [exportSubMode, setExportSubMode] = useState<'main' | 'select' | 'all'>('main');
   const [newCatInput, setNewCatInput] = useState('');
   const [newTypeInput, setNewTypeInput] = useState('');
   
@@ -170,12 +173,12 @@ const App = () => {
   const addNewItem = () => {
     const newItem: SummaryItem = {
       id: Date.now().toString(),
-      title: '点击编辑标题',
-      date: new Date().toISOString().split('T')[0].replace(/-/g, '.'),
+      title: DEFAULT_TEXT,
+      date: GET_CURRENT_DATE(),
       category: data.savedCategories[0] || '未分类',
       type: data.savedTypes[0] || '无',
-      content: '点击这里开始记录你的故事...',
-      thoughts: '写下关于这条记录的个人感悟...'
+      content: DEFAULT_TEXT,
+      thoughts: DEFAULT_TEXT
     };
     setData(prev => ({ ...prev, items: [...prev.items, newItem] }));
     setTimeout(() => {
@@ -295,40 +298,77 @@ const App = () => {
     });
   };
 
-  const captureCanvas = async () => {
-    if (!exportContainerRef.current) return null;
+  const captureNode = async (node: HTMLElement): Promise<string | null> => {
     try {
-      const node = exportContainerRef.current;
-      await new Promise(r => setTimeout(r, 500));
-      const dataUrl = await domtoimage.toPng(node, {
+      void node.offsetHeight;
+      const captureOptions = {
         width: 1440,
         height: node.scrollHeight,
-        quality: 1,
+        pixelRatio: 1,
         cacheBust: true,
-      });
-      return dataUrl;
+        useCORS: true,
+        includeQueryParams: true,
+        filter: (el: HTMLElement) => {
+          if (el.tagName === 'LINK' && !el.getAttribute('href')) return false;
+          return true;
+        },
+        style: {
+          transform: 'none',
+          visibility: 'visible',
+          opacity: '1'
+        }
+      };
+      try {
+        const blob = await htmlToImage.toBlob(node, captureOptions);
+        if (!blob) throw new Error('Blob is null');
+        return URL.createObjectURL(blob);
+      } catch (err) {
+        console.warn('Standard capture failed, trying fallback...', err);
+        const blob = await htmlToImage.toBlob(node, {
+          ...captureOptions,
+          skipFonts: true,
+          fontEmbedCSS: ''
+        });
+        return blob ? URL.createObjectURL(blob) : null;
+      }
     } catch (err) {
-      console.error('Capture failed', err);
+      console.error('Final capture error:', err);
       return null;
     }
   };
 
-  const handleExportLong = async () => {
+  useEffect(() => {
+    if (!isExporting || renderingItems.length === 0) return;
+    const performCapture = async () => {
+      await new Promise(r => setTimeout(r, 1500));
+      const node = exportContainerRef.current;
+      if (!node) {
+        setIsExporting(false);
+        setRenderingItems([]);
+        alert('导出节点初始化失败，请重试');
+        return;
+      }
+      if (exportSubMode === 'main') {
+        const url = await captureNode(node);
+        if (url) {
+          setPreviewUrls([url]);
+          setIsPreviewing(true);
+        } else {
+          alert('生成图片失败，可能是内容过多超过浏览器内存限制。');
+        }
+        setIsExporting(false);
+        setRenderingItems([]);
+      }
+    };
+    performCapture();
+  }, [isExporting, renderingItems]);
+
+  const handleExportLong = () => {
     setShowExportMenu(false);
     setIsExporting(true);
     setExportProgress(0);
+    setExportSubMode('main');
     setRenderingItems(data.items);
-    await new Promise(r => setTimeout(r, 800));
-    
-    const url = await captureCanvas();
-    if (url) {
-      setPreviewUrls([url]);
-      setIsPreviewing(true);
-    } else {
-      alert('导出长图失败，文本可能超出了浏览器渲染极限');
-    }
-    setIsExporting(false);
-    setRenderingItems([]);
   };
 
   const handleExportSelectedPreview = async () => {
@@ -339,50 +379,23 @@ const App = () => {
     setShowExportMenu(false);
     setIsExporting(true);
     setExportProgress(0);
-    
     const itemsToExport = data.items.filter(i => selectedItemIds.includes(i.id));
     const urls: string[] = [];
-    
     for (let i = 0; i < itemsToExport.length; i++) {
-      setExportProgress(Math.round(((i) / itemsToExport.length) * 100));
+      setExportProgress(Math.round((i / itemsToExport.length) * 100));
       setRenderingItems([itemsToExport[i]]);
-      await new Promise(r => setTimeout(r, 800));
-      const url = await captureCanvas();
-      if (url) urls.push(url);
+      await new Promise(r => setTimeout(r, 1200));
+      const node = exportContainerRef.current;
+      if (node) {
+        const url = await captureNode(node);
+        if (url) urls.push(url);
+      }
     }
-
-    setExportProgress(100);
     if (urls.length > 0) {
       setPreviewUrls(urls);
       setIsPreviewing(true);
     } else {
-      alert('导出选中项失败');
-    }
-    setIsExporting(false);
-    setRenderingItems([]);
-  };
-
-  const handleExportAllPages = async () => {
-    if (data.items.length === 0) return;
-    setShowExportMenu(false);
-    setIsExporting(true);
-    setExportProgress(0);
-    
-    const urls: string[] = [];
-    for (let i = 0; i < data.items.length; i++) {
-      setExportProgress(Math.round(((i) / data.items.length) * 100));
-      setRenderingItems([data.items[i]]);
-      await new Promise(r => setTimeout(r, 800));
-      const url = await captureCanvas();
-      if (url) urls.push(url);
-    }
-    
-    setExportProgress(100);
-    if (urls.length > 0) {
-      setPreviewUrls(urls);
-      setIsPreviewing(true);
-    } else {
-      alert('批量导出失败');
+      alert('批量导出失败，请检查浏览器权限。');
     }
     setIsExporting(false);
     setRenderingItems([]);
@@ -431,17 +444,18 @@ const App = () => {
       style={{ 
         width: '1440px',
         backgroundColor: currentTheme.bg,
-        minHeight: isExport ? '0' : '2560px',
-        paddingBottom: '30px'
+        minHeight: isExport ? 'auto' : '2560px',
+        paddingBottom: '30px',
+        transition: 'none'
       }}
-      className={`text-[${currentTheme.text}] pt-[20px] px-[100px] flex flex-col relative transition-colors duration-700 overflow-hidden`}
+      className={`text-[${currentTheme.text}] pt-[20px] px-[100px] flex flex-col relative overflow-hidden`}
     >
       <div className="absolute inset-0 opacity-[0.2] pointer-events-none" style={{ backgroundImage: TEXTURE_URL, backgroundSize: '64px 64px' }}></div>
       
       <div className="w-full flex flex-col mb-[20px] relative z-10 shrink-0">
         <div className="flex justify-between items-end border-b-[4px] border-current pb-8 mb-[60px]" style={{ color: currentTheme.text }}>
           <div className="flex flex-col">
-            <span contentEditable={!isExport} suppressContentEditableWarning onBlur={(e) => updateDataField('summaryType', e.currentTarget.innerHTML)} className={`font-serif text-[32px] tracking-[0.2em] font-black outline-none`}>
+            <span contentEditable={!isExport} suppressContentEditableWarning onBlur={(e) => updateDataField('summaryType', e.currentTarget.innerText.trim())} className={`font-serif text-[32px] tracking-[0.2em] font-black outline-none`}>
               {data.summaryType}
             </span>
           </div>
@@ -464,7 +478,7 @@ const App = () => {
                 <div className="flex-1 relative">
                   <span className="absolute -top-[35px] left-2 text-[20px] font-mono font-bold tracking-[0.8em] uppercase opacity-40">Yearly Chronicle</span>
                   <div className="absolute -left-6 top-8 w-40 h-40 rounded-full -z-10 opacity-10" style={{ backgroundColor: currentTheme.accent }}></div>
-                  <h1 contentEditable={!isExport} suppressContentEditableWarning onBlur={(e) => updateDataField('mainTitle', e.currentTarget.innerHTML)} className={`text-[170px] font-serif font-black leading-[1.1] tracking-tighter outline-none relative`} style={{ backgroundImage: `linear-gradient(to right, ${currentTheme.text} 55%, ${currentTheme.accent} 55%)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', display: 'inline-block' }}>
+                  <h1 contentEditable={!isExport} suppressContentEditableWarning onBlur={(e) => updateDataField('mainTitle', e.currentTarget.innerText.trim())} className={`text-[170px] font-serif font-black leading-[1.1] tracking-tighter outline-none relative`} style={{ backgroundImage: `linear-gradient(to right, ${currentTheme.text} 55%, ${currentTheme.accent} 55%)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', display: 'inline-block', minHeight: '1em' }}>
                     {data.mainTitle}
                   </h1>
                   <div className="flex items-center gap-4 mt-[-15px] mb-8">
@@ -477,7 +491,7 @@ const App = () => {
               <div className="flex items-start gap-12 mb-6">
                 <div className="flex flex-col relative z-20 shrink-0">
                   <span className="text-[20px] font-bold tracking-[0.4em] mb-2 uppercase opacity-60">AUTHENTICATED BY</span>
-                  <span contentEditable={!isExport} suppressContentEditableWarning onBlur={(e) => updateDataField('author', e.currentTarget.innerHTML)} className={`text-[56px] font-serif font-black tracking-widest underline decoration-[8px] underline-offset-[16px] outline-none w-fit`} style={{ textDecorationColor: currentTheme.accent }}>
+                  <span contentEditable={!isExport} suppressContentEditableWarning onBlur={(e) => updateDataField('author', e.currentTarget.innerText.trim())} className={`text-[56px] font-serif font-black tracking-widest underline decoration-[8px] underline-offset-[16px] outline-none w-fit`} style={{ textDecorationColor: currentTheme.accent }}>
                     {data.author}
                   </span>
                 </div>
@@ -542,7 +556,7 @@ const App = () => {
             <div key={item.id} className={`group relative flex gap-[110px] items-start transition-all duration-500 p-[40px] -mx-[40px] rounded-[70px]`}>
               <div className="flex flex-col items-end pt-[22px] min-w-[260px] relative">
                 <span className="text-[120px] font-serif italic leading-none mb-[32px] font-black opacity-10" style={{ color: currentTheme.accent }}>{String(data.items.findIndex(i => i.id === item.id) + 1).padStart(2, '0')}</span>
-                <span contentEditable={!isExport} suppressContentEditableWarning onBlur={(e) => updateItemField(item.id, 'date', e.currentTarget.innerText)} className={`text-[34px] font-mono font-black tracking-widest outline-none`}>{item.date}</span>
+                <span contentEditable={!isExport} suppressContentEditableWarning onBlur={(e) => updateItemField(item.id, 'date', e.currentTarget.innerText.trim())} className={`text-[34px] font-mono font-black tracking-widest outline-none`}>{item.date}</span>
                 
                 <div className="relative mt-4">
                   <div 
@@ -559,7 +573,7 @@ const App = () => {
 
               <div className="flex-1 flex flex-col">
                 <div className="flex justify-between items-start mb-[30px]">
-                  <h2 contentEditable={!isExport} suppressContentEditableWarning onBlur={(e) => updateItemField(item.id, 'title', e.currentTarget.innerHTML)} className={`text-[76px] font-serif font-black leading-tight tracking-tight outline-none w-full`}>{item.title}</h2>
+                  <h2 contentEditable={!isExport} suppressContentEditableWarning onBlur={(e) => updateItemField(item.id, 'title', e.currentTarget.innerText.trim())} className={`text-[76px] font-serif font-black leading-tight tracking-tight outline-none w-full min-h-[1em]`}>{item.title}</h2>
                   {!isExport && (
                     <div className="flex gap-4 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                       <button onClick={(e) => { e.stopPropagation(); removeItem(item.id, e); }} className="p-5 bg-white shadow-xl text-red-500 rounded-full active:scale-90 transition-transform"><Trash2 size={36} /></button>
@@ -653,7 +667,7 @@ const App = () => {
     <div className="fixed inset-0 bg-[#E8E4DF] flex flex-col overflow-hidden" onClick={handleGlobalClick}>
       
       {isExporting && (
-        <div className="fixed top-[-10000px] left-[-10000px] pointer-events-none opacity-0">
+        <div className="absolute left-[-4000px] top-0 pointer-events-none" style={{ width: '1440px' }}>
           <SummaryCanvas itemsToRender={renderingItems} isExport={true} />
         </div>
       )}
@@ -953,7 +967,7 @@ const App = () => {
                <div className="w-40 h-1.5 bg-gray-100 rounded-full overflow-hidden">
                  <div className="h-full bg-black transition-all duration-300" style={{ width: `${exportProgress}%` }}></div>
                </div>
-               <p className="text-[10px] text-gray-400 mt-2">处理高清长图需要一点时间</p>
+               <p className="text-[10px] text-gray-400 mt-2">高清生成中，请不要关闭浏览器</p>
              </div>
            </div>
         </div>
@@ -962,12 +976,12 @@ const App = () => {
       {isPreviewing && previewUrls.length > 0 && (
         <div className="fixed inset-0 z-[600] flex flex-col" style={{ backgroundColor: currentTheme.bg }}>
           <div className="h-16 flex items-center justify-between px-6 bg-white/40 backdrop-blur-2xl shrink-0 border-b border-black/5">
-            <button onClick={() => setIsPreviewing(false)} className="font-bold flex items-center gap-2" style={{ color: currentTheme.text }}><ChevronLeft size={20} /> 返回</button>
+            <button onClick={() => { previewUrls.forEach(URL.revokeObjectURL); setIsPreviewing(false); }} className="font-bold flex items-center gap-2" style={{ color: currentTheme.text }}><ChevronLeft size={20} /> 返回</button>
             <button 
               onClick={() => {
                 previewUrls.forEach((url, i) => {
                   const link = document.createElement('a');
-                  link.download = `年度总结_${data.year}_${i+1}.png`;
+                  link.download = `年度记录_${data.year}_${i+1}.png`;
                   link.href = url;
                   link.click();
                 });
