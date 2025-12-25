@@ -390,34 +390,35 @@ const SummaryCanvas = ({
               <div className="flex flex-col mb-8 relative">
                 {item.contents.map((c, idx) => (
                   <React.Fragment key={idx}>
-                    {item.contents.length > 1 && (
-                      <div className={`${idx === 0 ? 'mt-14 mb-4' : 'mt-20 mb-10'} relative flex items-center justify-start pr-20 group/divider`}>
-                        <div className="w-1.5 h-32 shrink-0 rounded-full" style={{ backgroundColor: currentTheme.accent }}></div>
-                        <div className="h-[1px] flex-1 ml-10" style={{ backgroundColor: `${currentTheme.text}20` }}></div>
-                        <div className="absolute left-6 -top-14 flex flex-col gap-2">
-                          <div className="flex items-center gap-4">
-                            <span className="text-[14px] font-mono font-black tracking-[0.8em] uppercase opacity-25 select-none">Record Part</span>
-                            <div className="h-[1px] w-20 opacity-10" style={{ backgroundColor: currentTheme.text }}></div>
-                          </div>
-                          <div className="flex items-baseline gap-4">
-                            <span className="text-[42px] font-serif font-black italic tracking-tighter" style={{ color: currentTheme.accent }}>PART.</span>
-                            <span className="text-[72px] font-mono font-black leading-none tracking-tight opacity-10">{String(data.items.findIndex(i => i.id === item.id) + 1).padStart(2, '0')}</span>
-                            <div className="flex flex-col gap-1 ml-4 opacity-40">
-                              <span className="text-[12px] font-mono font-bold tracking-widest uppercase">Section Log</span>
-                              <div className="w-12 h-1 rounded-full" style={{ backgroundColor: currentTheme.accent }}></div>
-                            </div>
-                          </div>
+                    {/* 分隔符与正文区块编号 */}
+                    <div className={`${idx === 0 ? 'mt-14 mb-4' : 'mt-20 mb-10'} relative flex items-center justify-start pr-20 group/divider`}>
+                      <div className="w-1.5 h-32 shrink-0 rounded-full" style={{ backgroundColor: currentTheme.accent }}></div>
+                      <div className="h-[1px] flex-1 ml-10" style={{ backgroundColor: `${currentTheme.text}20` }}></div>
+                      <div className="absolute left-6 -top-14 flex flex-col gap-2">
+                        <div className="flex items-center gap-4">
+                          <span className="text-[14px] font-mono font-black tracking-[0.8em] uppercase opacity-25 select-none">Record Part</span>
+                          <div className="h-[1px] w-20 opacity-10" style={{ backgroundColor: currentTheme.text }}></div>
                         </div>
-                        <div className="ml-12 flex items-center gap-3">
-                           <div className="w-3 h-3 border-2 border-current rotate-45 opacity-20"></div>
-                           <div className="w-3 h-3 rounded-full bg-current opacity-10"></div>
-                           <div className="w-3 h-3 rounded-full bg-current opacity-5"></div>
-                        </div>
-                        <div className="absolute right-0 -bottom-10 opacity-[0.03] select-none pointer-events-none">
-                          <span className="text-[120px] font-mono font-black uppercase tracking-tighter">DATA ARCHIVE</span>
+                        <div className="flex items-baseline gap-4">
+                          <span className="text-[42px] font-serif font-black italic tracking-tighter" style={{ color: currentTheme.accent }}>PART.</span>
+                          {/* 这里是同一个时间轴内的正文区域编号：01, 02, 03... */}
+                          <span className="text-[72px] font-mono font-black leading-none tracking-tight opacity-10">{String(idx + 1).padStart(2, '0')}</span>
+                          <div className="flex flex-col gap-1 ml-4 opacity-40">
+                            <span className="text-[12px] font-mono font-bold tracking-widest uppercase">Section Log</span>
+                            <div className="w-12 h-1 rounded-full" style={{ backgroundColor: currentTheme.accent }}></div>
+                          </div>
                         </div>
                       </div>
-                    )}
+                      <div className="ml-12 flex items-center gap-3">
+                         <div className="w-3 h-3 border-2 border-current rotate-45 opacity-20"></div>
+                         <div className="w-3 h-3 rounded-full bg-current opacity-10"></div>
+                         <div className="w-3 h-3 rounded-full bg-current opacity-5"></div>
+                      </div>
+                      <div className="absolute right-0 -bottom-10 opacity-[0.03] select-none pointer-events-none">
+                        <span className="text-[120px] font-mono font-black uppercase tracking-tighter">DATA ARCHIVE</span>
+                      </div>
+                    </div>
+                    
                     <div className="relative group/block">
                       <div 
                         contentEditable={!isExport} 
