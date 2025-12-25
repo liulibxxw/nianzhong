@@ -27,7 +27,9 @@ import {
   Palette, 
   Search,
   Tags,
-  Layout
+  Layout,
+  PlusSquare,
+  MinusSquare
 } from 'lucide-react';
 import * as htmlToImage from 'html-to-image';
 
@@ -37,7 +39,7 @@ interface SummaryItem {
   date: string;
   category: string;
   type: string;
-  content: string;
+  contents: string[];
   thoughts: string;
 }
 
@@ -79,7 +81,7 @@ const TEXTURE_URL = `url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAy
 
 const DEFAULT_TEXT = '';
 const GET_CURRENT_DATE = () => new Date().getFullYear().toString();
-const STORAGE_KEY = 'year_end_summary_app_v1';
+const STORAGE_KEY = 'year_end_summary_app_v2';
 
 const InlinePicker = ({ 
   id, 
@@ -98,7 +100,7 @@ const InlinePicker = ({
   savedCategories: string[],
   savedTypes: string[],
   currentTheme: ThemeConfig,
-  updateItemField: (id: string, field: keyof SummaryItem, value: string) => void,
+  updateItemField: (id: string, field: keyof SummaryItem, value: any) => void,
   setActivePicker: (val: {id: string, type: 'category' | 'type'} | null) => void,
   setShowTagManager: (val: boolean) => void
 }) => {
@@ -156,7 +158,10 @@ const SummaryCanvas = ({
   activePicker,
   setActivePicker,
   handlePaste,
-  setShowTagManager
+  setShowTagManager,
+  addContentBlock,
+  removeContentBlock,
+  updateContentBlock
 }: { 
   data: SummaryData, 
   currentTheme: ThemeConfig, 
@@ -165,12 +170,15 @@ const SummaryCanvas = ({
   canvasRef?: React.RefObject<HTMLDivElement | null>,
   exportContainerRef?: React.RefObject<HTMLDivElement | null>,
   updateDataField: (field: keyof Omit<SummaryData, 'items' | 'savedCategories' | 'savedTypes'>, value: string) => void,
-  updateItemField: (id: string, field: keyof SummaryItem, value: string) => void,
+  updateItemField: (id: string, field: keyof SummaryItem, value: any) => void,
   removeItem: (id: string, e: React.MouseEvent) => void,
   activePicker: {id: string, type: 'category' | 'type'} | null,
   setActivePicker: (val: {id: string, type: 'category' | 'type'} | null) => void,
-  handlePaste: (id: string, field: keyof SummaryItem, e: React.ClipboardEvent) => void,
-  setShowTagManager: (val: boolean) => void
+  handlePaste: (id: string, index: number | null, field: keyof SummaryItem, e: React.ClipboardEvent) => void,
+  setShowTagManager: (val: boolean) => void,
+  addContentBlock: (itemId: string) => void,
+  removeContentBlock: (itemId: string, index: number) => void,
+  updateContentBlock: (itemId: string, index: number, value: string) => void
 }) => (
   <div 
     ref={isExport ? exportContainerRef : canvasRef}
@@ -298,7 +306,7 @@ const SummaryCanvas = ({
                   style={{ backgroundColor: `${currentTheme.accent}22` }}
                 >
                   <span className="text-[26px] tracking-[0.4em] font-black uppercase pl-[0.4em]" style={{ color: currentTheme.text }}>{item.category}</span>
-                  {!isExport && <ChevronDown size={24} className={`ml-2 opacity-40 transition-transform ${isCategoryOpen ? 'rotate-180' : ''}`} />}
+                  {!isExport && <ChevronDown size={24} className={`ml-2 opacity-40 transition-transform ${isCategoryOpen ? 'rotate-180' : 'rotate-0'}`} />}
                 </div>
                 {!isExport && isCategoryOpen && (
                   <InlinePicker 
@@ -334,7 +342,7 @@ const SummaryCanvas = ({
                     className={`text-[34px] italic font-black uppercase opacity-60 outline-none flex items-center gap-4 cursor-pointer px-4 py-2 rounded-xl transition-all hover:bg-black/5`}
                   >
                     {item.type} 
-                    {!isExport && <ChevronDown size={20} className={`opacity-30 transition-transform ${isTypeOpen ? 'rotate-180' : ''}`} />}
+                    {!isExport && <ChevronDown size={20} className={`opacity-30 transition-transform ${isTypeOpen ? 'rotate-180' : 'rotate-0'}`} />}
                   </span>
                   {!isExport && isTypeOpen && (
                     <InlinePicker 
@@ -352,16 +360,79 @@ const SummaryCanvas = ({
                 </div>
               </div>
 
-              <div 
-                contentEditable={!isExport} 
-                suppressContentEditableWarning 
-                onBlur={(e) => {
-                  updateItemField(item.id, 'content', e.currentTarget.innerHTML);
-                }}
-                onPaste={(e) => handlePaste(item.id, 'content', e)}
-                className={`text-[44px] leading-[1.85] font-serif text-justify whitespace-pre-wrap break-words break-all outline-none w-full min-h-[1em] mb-8`}
-                dangerouslySetInnerHTML={{ __html: item.content }}
-              />
+              <div className="flex flex-col mb-8 relative">
+                {item.contents.map((c, idx) => (
+                  <React.Fragment key={idx}>
+                    {item.contents.length > 1 && (
+                      <div className={`${idx === 0 ? 'mt-12 mb-20' : 'my-28'} relative flex items-center justify-start pr-20 group/divider`}>
+                        {/* 左侧加粗竖向装饰色块 */}
+                        <div className="w-1.5 h-32 shrink-0 rounded-full" style={{ backgroundColor: currentTheme.accent }}></div>
+                        
+                        {/* 主引导线 */}
+                        <div className="h-[1px] flex-1 ml-10" style={{ backgroundColor: `${currentTheme.text}20` }}></div>
+                        
+                        {/* 核心排版标签区域 */}
+                        <div className="absolute left-6 -top-14 flex flex-col gap-2">
+                          <div className="flex items-center gap-4">
+                            <span className="text-[14px] font-mono font-black tracking-[0.8em] uppercase opacity-25 select-none">Record Part</span>
+                            <div className="h-[1px] w-20 opacity-10" style={{ backgroundColor: currentTheme.text }}></div>
+                          </div>
+                          <div className="flex items-baseline gap-4">
+                            <span className="text-[42px] font-serif font-black italic tracking-tighter" style={{ color: currentTheme.accent }}>PART.</span>
+                            <span className="text-[72px] font-mono font-black leading-none tracking-tight opacity-10">{String(idx + 1).padStart(2, '0')}</span>
+                            <div className="flex flex-col gap-1 ml-4 opacity-40">
+                              <span className="text-[12px] font-mono font-bold tracking-widest uppercase">Section Log</span>
+                              <div className="w-12 h-1 rounded-full" style={{ backgroundColor: currentTheme.accent }}></div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* 右侧微型几何装饰 */}
+                        <div className="ml-12 flex items-center gap-3">
+                           <div className="w-3 h-3 border-2 border-current rotate-45 opacity-20"></div>
+                           <div className="w-3 h-3 rounded-full bg-current opacity-10"></div>
+                           <div className="w-3 h-3 rounded-full bg-current opacity-5"></div>
+                        </div>
+
+                        {/* 装饰性排版水印 */}
+                        <div className="absolute right-0 -bottom-10 opacity-[0.03] select-none pointer-events-none">
+                          <span className="text-[120px] font-mono font-black uppercase tracking-tighter">DATA ARCHIVE</span>
+                        </div>
+                      </div>
+                    )}
+                    <div className="relative group/block">
+                      <div 
+                        contentEditable={!isExport} 
+                        suppressContentEditableWarning 
+                        onBlur={(e) => {
+                          updateContentBlock(item.id, idx, e.currentTarget.innerHTML);
+                        }}
+                        onPaste={(e) => handlePaste(item.id, idx, 'contents', e)}
+                        className={`text-[44px] leading-[1.85] font-serif text-justify whitespace-pre-wrap break-words break-all outline-none w-full min-h-[1em]`}
+                        dangerouslySetInnerHTML={{ __html: c }}
+                      />
+                      {!isExport && item.contents.length > 1 && (
+                        <button 
+                          onClick={() => removeContentBlock(item.id, idx)}
+                          className="absolute -left-12 top-2 opacity-0 group-hover/block:opacity-40 hover:opacity-100 transition-opacity p-2 text-red-400"
+                        >
+                          <MinusSquare size={24} />
+                        </button>
+                      )}
+                    </div>
+                  </React.Fragment>
+                ))}
+                {!isExport && (
+                   <button 
+                    onClick={() => addContentBlock(item.id)}
+                    className="mt-12 flex items-center gap-3 py-4 px-6 border-2 border-dashed border-black/10 rounded-3xl opacity-30 hover:opacity-100 transition-all text-[24px] font-black uppercase tracking-widest"
+                    style={{ color: currentTheme.accent }}
+                   >
+                     <PlusSquare size={28} />
+                     Add Content Block
+                   </button>
+                )}
+              </div>
 
               <div className="flex items-start gap-12 border-t-[1px] pt-8" style={{ borderColor: `${currentTheme.text}22` }}>
                 <div className="shrink-0 flex flex-col items-center">
@@ -378,8 +449,8 @@ const SummaryCanvas = ({
                     onBlur={(e) => {
                       updateItemField(item.id, 'thoughts', e.currentTarget.innerHTML);
                     }}
-                    onPaste={(e) => handlePaste(item.id, 'thoughts', e)}
-                    className="text-[40px] leading-[1.8] font-serif font-light italic break-words break-all outline-none w-full whitespace-pre-wrap opacity-90 min-h-[1em]"
+                    onPaste={(e) => handlePaste(item.id, null, 'thoughts', e)}
+                    className="text-[40px] Bird leading-[1.8] font-serif font-light italic break-words break-all outline-none w-full whitespace-pre-wrap opacity-90 min-h-[1em]"
                     dangerouslySetInnerHTML={{ __html: item.thoughts }}
                   />
                 </div>
@@ -412,16 +483,20 @@ const SummaryCanvas = ({
 
 const App = () => {
   const [data, setData] = useState<SummaryData>(() => {
-    // 尝试从本地存储初始化数据
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        // 数据结构迁移支持旧版 content 字段
+        parsed.items = parsed.items.map((item: any) => ({
+          ...item,
+          contents: item.contents || [item.content || DEFAULT_TEXT]
+        }));
+        return parsed;
       } catch (e) {
         console.error("Failed to parse saved data:", e);
       }
     }
-    // 默认初始数据
     return {
       mainTitle: '衔书又止',
       author: '琉璃',
@@ -439,14 +514,13 @@ const App = () => {
           date: GET_CURRENT_DATE(),
           category: '文稿',
           type: '无',
-          content: DEFAULT_TEXT,
+          contents: [DEFAULT_TEXT],
           thoughts: DEFAULT_TEXT
         }
       ]
     };
   });
 
-  // 监听数据变化并自动保存到 localStorage
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   }, [data]);
@@ -475,6 +549,7 @@ const App = () => {
   const [showFontSizeSlider, setShowFontSizeSlider] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [currentFontSize, setCurrentFontSize] = useState(16);
+  const [currentAlignment, setCurrentAlignment] = useState<string>('left');
 
   const currentTheme = THEMES.find(t => t.id === data.themeId) || THEMES[0];
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -484,11 +559,21 @@ const App = () => {
   const [renderingItems, setRenderingItems] = useState<SummaryItem[]>([]);
 
   useEffect(() => {
+    const handleSelectionChange = () => {
+      if (document.queryCommandState('justifyCenter')) setCurrentAlignment('center');
+      else if (document.queryCommandState('justifyRight')) setCurrentAlignment('right');
+      else if (document.queryCommandState('justifyFull')) setCurrentAlignment('justify');
+      else setCurrentAlignment('left');
+    };
+    document.addEventListener('selectionchange', handleSelectionChange);
+    return () => document.removeEventListener('selectionchange', handleSelectionChange);
+  }, []);
+
+  useEffect(() => {
     const updateScale = () => {
       const width = window.innerWidth;
       const targetWidth = 1440;
-      const newScale = width / targetWidth;
-      setScale(newScale);
+      setScale(width / targetWidth);
     };
     updateScale();
     window.addEventListener('resize', updateScale);
@@ -505,17 +590,14 @@ const App = () => {
     });
     resizeObserver.observe(canvasRef.current);
     return () => resizeObserver.disconnect();
-  }, [data.items.length, data.intro]);
+  }, [data.items, data.intro]);
 
   const handleScroll = (e: React.UIEvent<HTMLElement>) => {
-    const scrollTop = e.currentTarget.scrollTop;
-    setShowScrollTop(scrollTop > 400);
+    setShowScrollTop(e.currentTarget.scrollTop > 400);
   };
 
   const scrollToTop = () => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+    scrollContainerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const addNewItem = () => {
@@ -525,14 +607,12 @@ const App = () => {
       date: GET_CURRENT_DATE(),
       category: data.savedCategories[0] || '未分类',
       type: data.savedTypes[0] || '无',
-      content: DEFAULT_TEXT,
+      contents: [DEFAULT_TEXT],
       thoughts: DEFAULT_TEXT
     };
     setData(prev => ({ ...prev, items: [...prev.items, newItem] }));
     setTimeout(() => {
-      if (scrollContainerRef.current) {
-        scrollContainerRef.current.scrollTo({ top: scrollContainerRef.current.scrollHeight, behavior: 'smooth' });
-      }
+      scrollContainerRef.current?.scrollTo({ top: scrollContainerRef.current.scrollHeight, behavior: 'smooth' });
     }, 100);
   };
 
@@ -545,21 +625,58 @@ const App = () => {
     setData(prev => ({ ...prev, [field]: value }));
   };
 
-  const updateItemField = (id: string, field: keyof SummaryItem, value: string) => {
+  const updateItemField = (id: string, field: keyof SummaryItem, value: any) => {
     setData(prev => ({
       ...prev,
       items: prev.items.map(item => item.id === id ? { ...item, [field]: value } : item)
     }));
   };
 
-  const handlePaste = (id: string, field: keyof SummaryItem, e: React.ClipboardEvent) => {
+  const addContentBlock = (itemId: string) => {
+    setData(prev => ({
+      ...prev,
+      items: prev.items.map(item => 
+        item.id === itemId 
+          ? { ...item, contents: [...item.contents, DEFAULT_TEXT] } 
+          : item
+      )
+    }));
+  };
+
+  const removeContentBlock = (itemId: string, index: number) => {
+    setData(prev => ({
+      ...prev,
+      items: prev.items.map(item => 
+        item.id === itemId 
+          ? { ...item, contents: item.contents.filter((_, i) => i !== index) } 
+          : item
+      )
+    }));
+  };
+
+  const updateContentBlock = (itemId: string, index: number, value: string) => {
+    setData(prev => ({
+      ...prev,
+      items: prev.items.map(item => 
+        item.id === itemId 
+          ? { ...item, contents: item.contents.map((c, i) => i === index ? value : c) } 
+          : item
+      )
+    }));
+  };
+
+  const handlePaste = (id: string, index: number | null, field: keyof SummaryItem, e: React.ClipboardEvent) => {
     e.preventDefault();
     const text = e.clipboardData.getData('text/plain');
     if (!text) return;
 
     document.execCommand('insertText', false, text);
     const target = e.currentTarget as HTMLElement;
-    updateItemField(id, field, target.innerHTML);
+    if (field === 'contents' && index !== null) {
+      updateContentBlock(id, index, target.innerHTML);
+    } else {
+      updateItemField(id, field, target.innerHTML);
+    }
   };
 
   const addCategory = () => {
@@ -609,14 +726,12 @@ const App = () => {
       alert('请先输入要搜索的关键词');
       return;
     }
-    
     setData(prev => {
       const newItems = prev.items.map(item => {
         const processHtml = (html: string) => {
           const parser = new DOMParser();
           const doc = parser.parseFromString(`<div>${html}</div>`, 'text/html');
           const body = doc.body.firstChild as HTMLElement;
-          
           const nodes = Array.from(body.childNodes);
           nodes.forEach(node => {
             if (node.nodeType === Node.TEXT_NODE) {
@@ -635,10 +750,9 @@ const App = () => {
           });
           return body.innerHTML;
         };
-
         return {
           ...item,
-          content: processHtml(item.content),
+          contents: item.contents.map(c => processHtml(c)),
           thoughts: processHtml(item.thoughts)
         };
       });
@@ -656,31 +770,17 @@ const App = () => {
         cacheBust: true,
         useCORS: true,
         includeQueryParams: true,
-        filter: (el: HTMLElement) => {
-          if (el.tagName === 'LINK' && !el.getAttribute( 'href')) return false;
-          return true;
-        },
-        style: {
-          transform: 'none',
-          visibility: 'visible',
-          opacity: '1'
-        }
+        filter: (el: HTMLElement) => el.tagName !== 'LINK' || !!el.getAttribute('href'),
+        style: { transform: 'none', visibility: 'visible', opacity: '1' }
       };
       try {
         const blob = await htmlToImage.toBlob(node, captureOptions);
-        if (!blob) throw new Error('Blob is null');
-        return URL.createObjectURL(blob);
+        return blob ? URL.createObjectURL(blob) : null;
       } catch (err) {
-        console.warn('Standard capture failed, trying fallback...', err);
-        const blob = await htmlToImage.toBlob(node, {
-          ...captureOptions,
-          skipFonts: true,
-          fontEmbedCSS: ''
-        });
+        const blob = await htmlToImage.toBlob(node, { ...captureOptions, skipFonts: true, fontEmbedCSS: '' });
         return blob ? URL.createObjectURL(blob) : null;
       }
     } catch (err) {
-      console.error('Final capture error:', err);
       return null;
     }
   };
@@ -693,7 +793,6 @@ const App = () => {
       if (!node) {
         setIsExporting(false);
         setRenderingItems([]);
-        alert('导出节点初始化失败，请重试');
         return;
       }
       if (exportSubMode === 'main') {
@@ -701,8 +800,6 @@ const App = () => {
         if (url) {
           setPreviewUrls([url]);
           setIsPreviewing(true);
-        } else {
-          alert('生成图片失败，可能是内容过多超过浏览器内存限制。');
         }
         setIsExporting(false);
         setRenderingItems([]);
@@ -720,13 +817,9 @@ const App = () => {
   };
 
   const handleExportSelectedPreview = async () => {
-    if (selectedItemIds.length === 0) {
-      alert('请先选择要导出的时间轴序号');
-      return;
-    }
+    if (selectedItemIds.length === 0) return;
     setShowExportMenu(false);
     setIsExporting(true);
-    setExportProgress(0);
     const itemsToExport = data.items.filter(i => selectedItemIds.includes(i.id));
     const urls: string[] = [];
     for (let i = 0; i < itemsToExport.length; i++) {
@@ -742,17 +835,13 @@ const App = () => {
     if (urls.length > 0) {
       setPreviewUrls(urls);
       setIsPreviewing(true);
-    } else {
-      alert('批量导出失败，请检查浏览器权限。');
     }
     setIsExporting(false);
     setRenderingItems([]);
   };
 
   const toggleItemSelection = (id: string) => {
-    setSelectedItemIds(prev => 
-      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
-    );
+    setSelectedItemIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
   };
 
   const handleGlobalClick = () => {
@@ -765,12 +854,10 @@ const App = () => {
     setShowColorPicker(false);
   };
 
-  // 通用弹窗包装样式
   const POPUP_WRAPPER_CLASS = "fixed bottom-[calc(3.5rem+env(safe-area-inset-bottom)+16px)] left-4 right-4 bg-white/95 backdrop-blur-3xl rounded-[32px] shadow-[0_32px_80px_-16px_rgba(0,0,0,0.25)] border border-white/80 p-5 animate-in slide-in-from-bottom-4 fade-in duration-500 z-[300]";
 
   return (
     <div className="fixed inset-0 bg-[#E8E4DF] flex flex-col overflow-hidden" onClick={handleGlobalClick}>
-      
       {isExporting && (
         <div className="absolute left-[-4000px] top-0 pointer-events-none" style={{ width: '1440px' }}>
           <SummaryCanvas 
@@ -786,6 +873,9 @@ const App = () => {
             setActivePicker={setActivePicker}
             handlePaste={handlePaste}
             setShowTagManager={setShowTagManager}
+            addContentBlock={addContentBlock}
+            removeContentBlock={removeContentBlock}
+            updateContentBlock={updateContentBlock}
           />
         </div>
       )}
@@ -805,6 +895,9 @@ const App = () => {
               setActivePicker={setActivePicker}
               handlePaste={handlePaste}
               setShowTagManager={setShowTagManager}
+              addContentBlock={addContentBlock}
+              removeContentBlock={removeContentBlock}
+              updateContentBlock={updateContentBlock}
             />
           </div>
         </div>
@@ -812,110 +905,63 @@ const App = () => {
       </main>
 
       {showScrollTop && (
-        <button onClick={(e) => { e.stopPropagation(); scrollToTop(); }} className="fixed bottom-32 right-6 w-14 h-14 bg-white/60 backdrop-blur-md rounded-full flex items-center justify-center shadow-lg border border-black/5 z-[60] animate-in fade-in zoom-in duration-300 active:scale-90 hover:bg-white/80" style={{ color: currentTheme.accent }}>
+        <button onClick={(e) => { e.stopPropagation(); scrollToTop(); }} className="fixed bottom-32 right-6 w-14 h-14 bg-white/60 backdrop-blur-md rounded-full flex items-center justify-center shadow-lg border border-black/5 z-[60] animate-in fade-in zoom-in duration-300 active:scale-90" style={{ color: currentTheme.accent }}>
           <ArrowUp size={28} />
         </button>
       )}
 
-      <div className="relative z-[250] bg-white/80 backdrop-blur-xl border-t border-black/5 flex flex-col animate-in slide-in-from-bottom duration-500" onClick={e => e.stopPropagation()}>
-        
+      <div className="relative z-[250] bg-white/80 backdrop-blur-xl border-t border-black/5 flex flex-col" onClick={e => e.stopPropagation()}>
         <div className="px-4 py-2 flex flex-col gap-2 relative border-b border-black/5">
           {showFontSizeSlider && (
-            <div 
-              className="absolute bottom-[calc(100%+12px)] left-4 right-4 bg-white/95 backdrop-blur-xl rounded-[24px] p-4 shadow-xl border border-white animate-in slide-in-from-bottom-2 duration-300"
-              onClick={e => e.stopPropagation()}
-            >
+            <div className="absolute bottom-[calc(100%+12px)] left-4 right-4 bg-white/95 backdrop-blur-xl rounded-[24px] p-4 shadow-xl border border-white animate-in slide-in-from-bottom-2 duration-300" onClick={e => e.stopPropagation()}>
               <div className="flex items-center gap-4 py-1">
                 <span className="text-[12px] font-black text-black/60 min-w-[24px] text-center font-mono">{currentFontSize}</span>
                 <div className="flex-1 relative pt-1">
-                  <input 
-                    type="range" 
-                    min="12" 
-                    max="80" 
-                    step="1"
-                    value={currentFontSize}
-                    onChange={(e) => {
-                      const val = parseInt(e.target.value);
-                      setCurrentFontSize(val);
-                      applyStyle('fontSize', val.toString());
-                    }}
-                    className="w-full h-1 bg-gray-200 rounded-full appearance-none accent-black cursor-pointer relative z-10"
-                  />
+                  <input type="range" min="12" max="80" step="1" value={currentFontSize} onChange={(e) => {
+                    const val = parseInt(e.target.value);
+                    setCurrentFontSize(val);
+                    applyStyle('fontSize', val.toString());
+                  }} className="w-full h-1 bg-gray-200 rounded-full appearance-none accent-black cursor-pointer relative z-10" />
                 </div>
               </div>
             </div>
           )}
-
           {showColorPicker && (
-            <div 
-              className="absolute bottom-[calc(100%+12px)] left-4 right-4 bg-white/95 backdrop-blur-xl rounded-[24px] p-4 shadow-xl border border-white animate-in slide-in-from-bottom-2 duration-300"
-              onClick={e => e.stopPropagation()}
-            >
+            <div className="absolute bottom-[calc(100%+12px)] left-4 right-4 bg-white/95 backdrop-blur-xl rounded-[24px] p-4 shadow-xl border border-white animate-in slide-in-from-bottom-2 duration-300" onClick={e => e.stopPropagation()}>
               <div className="flex items-center gap-2.5 overflow-x-auto no-scrollbar py-1 px-0.5">
                 {COLOR_PRESETS.map((color) => (
-                  <button 
-                    key={color}
-                    onClick={() => {
-                      applyStyle('foreColor', color);
-                      setShowColorPicker(false);
-                    }}
-                    className="w-9 h-9 rounded-full shrink-0 shadow-inner border border-black/5 transition-transform active:scale-90 flex items-center justify-center overflow-hidden"
-                    style={{ backgroundColor: color }}
-                  >
+                  <button key={color} onClick={() => { applyStyle('foreColor', color); setShowColorPicker(false); }} className="w-9 h-9 rounded-full shrink-0 shadow-inner border border-black/5 flex items-center justify-center overflow-hidden" style={{ backgroundColor: color }}>
                     {color === '#FFFFFF' && <div className="w-1/2 h-[1px] bg-gray-100 rotate-45"></div>}
                   </button>
                 ))}
               </div>
             </div>
           )}
-
           <div className="flex items-center justify-between">
             {toolbarMode === 'normal' ? (
               <div className="flex items-center gap-1 w-full flex-nowrap overflow-x-auto no-scrollbar">
-                <button onMouseDown={(e) => { e.preventDefault(); applyStyle('justifyLeft'); }} className="p-2.5 hover:bg-black/5 rounded-2xl transition-colors shrink-0"><AlignLeft size={20} /></button>
-                <button onMouseDown={(e) => { e.preventDefault(); applyStyle('justifyCenter'); }} className="p-2.5 hover:bg-black/5 rounded-2xl transition-colors shrink-0"><AlignCenter size={20} /></button>
-                <button onMouseDown={(e) => { e.preventDefault(); applyStyle('justifyRight'); }} className="p-2.5 hover:bg-black/5 rounded-2xl transition-colors shrink-0"><AlignRight size={20} /></button>
-                <button onMouseDown={(e) => { e.preventDefault(); applyStyle('justifyFull'); }} className="p-2.5 hover:bg-black/5 rounded-2xl transition-colors shrink-0"><AlignJustify size={20} /></button>
+                <button onMouseDown={(e) => { e.preventDefault(); applyStyle('justifyLeft'); }} className={`p-2.5 rounded-2xl transition-all shrink-0 ${currentAlignment === 'left' ? 'bg-black text-white' : 'hover:bg-black/5'}`}><AlignLeft size={20} /></button>
+                <button onMouseDown={(e) => { e.preventDefault(); applyStyle('justifyCenter'); }} className={`p-2.5 rounded-2xl transition-all shrink-0 ${currentAlignment === 'center' ? 'bg-black text-white' : 'hover:bg-black/5'}`}><AlignCenter size={20} /></button>
+                <button onMouseDown={(e) => { e.preventDefault(); applyStyle('justifyRight'); }} className={`p-2.5 rounded-2xl transition-all shrink-0 ${currentAlignment === 'right' ? 'bg-black text-white' : 'hover:bg-black/5'}`}><AlignRight size={20} /></button>
+                <button onMouseDown={(e) => { e.preventDefault(); applyStyle('justifyFull'); }} className={`p-2.5 rounded-2xl transition-all shrink-0 ${currentAlignment === 'justify' ? 'bg-black text-white' : 'hover:bg-black/5'}`}><AlignJustify size={20} /></button>
                 <div className="w-[1px] h-6 bg-black/5 mx-1 shrink-0"></div>
-                <button 
-                  onMouseDown={(e) => { e.preventDefault(); setShowFontSizeSlider(!showFontSizeSlider); setShowColorPicker(false); }} 
-                  className={`p-2.5 rounded-2xl transition-colors flex items-center gap-1 shrink-0 ${showFontSizeSlider ? 'bg-black text-white' : 'hover:bg-black/5'}`}
-                >
-                  <Type size={20} />
-                </button>
+                <button onMouseDown={(e) => { e.preventDefault(); setShowFontSizeSlider(!showFontSizeSlider); setShowColorPicker(false); }} className={`p-2.5 rounded-2xl transition-colors flex items-center gap-1 shrink-0 ${showFontSizeSlider ? 'bg-black text-white' : 'hover:bg-black/5'}`}><Type size={20} /></button>
                 <div className="w-[1px] h-6 bg-black/5 mx-1 shrink-0"></div>
-                <button 
-                  onMouseDown={(e) => { e.preventDefault(); setShowColorPicker(!showColorPicker); setShowFontSizeSlider(false); }} 
-                  className={`p-2.5 rounded-2xl transition-colors shrink-0 ${showColorPicker ? 'bg-black/10' : 'hover:bg-black/5'}`}
-                >
-                  <Palette size={20} style={{ color: currentTheme.accent }} />
-                </button>
+                <button onMouseDown={(e) => { e.preventDefault(); setShowColorPicker(!showColorPicker); setShowFontSizeSlider(false); }} className={`p-2.5 rounded-2xl transition-colors shrink-0 ${showColorPicker ? 'bg-black/10' : 'hover:bg-black/5'}`}><Palette size={20} style={{ color: currentTheme.accent }} /></button>
                 <div className="flex-1"></div>
-                <button 
-                  onClick={(e) => { e.stopPropagation(); setToolbarMode('batch'); setShowFontSizeSlider(false); setShowColorPicker(false); }} 
-                  className="p-2.5 bg-black/5 hover:bg-black/10 rounded-2xl transition-colors flex items-center gap-2 shrink-0"
-                >
-                  <Search size={18} />
-                  <span className="text-[10px] font-bold uppercase">批量</span>
-                </button>
+                <button onClick={(e) => { e.stopPropagation(); setToolbarMode('batch'); }} className="p-2.5 bg-black/5 rounded-2xl flex items-center gap-2 shrink-0"><Search size={18} /><span className="text-[10px] font-bold uppercase">批量</span></button>
               </div>
             ) : (
               <div className="flex items-center gap-2 w-full flex-nowrap animate-in fade-in duration-300">
                 <div className="flex-1 relative min-0">
                   <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                  <input 
-                    value={batchSearchTerm} 
-                    onChange={e => setBatchSearchTerm(e.target.value)}
-                    placeholder="搜索并批量对齐..." 
-                    className="w-full bg-black/5 rounded-xl pl-9 pr-4 py-2.5 text-[12px] font-bold outline-none focus:bg-white border border-transparent focus:border-black/10 transition-all"
-                    onClick={e => e.stopPropagation()}
-                  />
+                  <input value={batchSearchTerm} onChange={e => setBatchSearchTerm(e.target.value)} placeholder="搜索并批量对齐..." className="w-full bg-black/5 rounded-xl pl-9 pr-4 py-2.5 text-[12px] font-bold outline-none focus:bg-white border border-transparent transition-all" />
                 </div>
                 <div className="flex items-center gap-0.5 shrink-0 bg-black/5 p-1 rounded-xl">
-                  <button onClick={(e) => { e.stopPropagation(); batchModifyAlignment('left'); }} className="p-2 hover:bg-black/10 rounded-lg transition-colors"><AlignLeft size={16} /></button>
-                  <button onClick={(e) => { e.stopPropagation(); batchModifyAlignment('center'); }} className="p-2 hover:bg-black/10 rounded-lg transition-colors"><AlignCenter size={16} /></button>
-                  <button onClick={(e) => { e.stopPropagation(); batchModifyAlignment('right'); }} className="p-2 hover:bg-black/10 rounded-lg transition-colors"><AlignRight size={16} /></button>
-                  <button onClick={(e) => { e.stopPropagation(); setToolbarMode('normal'); }} className="p-2 ml-1 bg-black text-white rounded-lg active:scale-90 transition-transform"><Check size={16} /></button>
+                  <button onClick={(e) => { e.stopPropagation(); batchModifyAlignment('left'); }} className="p-2 hover:bg-black/10 rounded-lg"><AlignLeft size={16} /></button>
+                  <button onClick={(e) => { e.stopPropagation(); batchModifyAlignment('center'); }} className="p-2 hover:bg-black/10 rounded-lg"><AlignCenter size={16} /></button>
+                  <button onClick={(e) => { e.stopPropagation(); batchModifyAlignment('right'); }} className="p-2 hover:bg-black/10 rounded-lg"><AlignRight size={16} /></button>
+                  <button onClick={(e) => { e.stopPropagation(); setToolbarMode('normal'); }} className="p-2 ml-1 bg-black text-white rounded-lg"><Check size={16} /></button>
                 </div>
               </div>
             )}
@@ -928,180 +974,74 @@ const App = () => {
               <div className={POPUP_WRAPPER_CLASS} onClick={e => e.stopPropagation()}>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="w-0.5 h-4 rounded-full" style={{ backgroundColor: currentTheme.accent }}></div>
-                      <h3 className="text-[15px] font-serif font-black text-gray-800 tracking-tight">编辑概览</h3>
-                    </div>
-                    <button onClick={() => setShowConfig(false)} className="text-gray-300 hover:text-black transition-colors"><X size={16}/></button>
+                    <div className="flex items-center gap-2"><div className="w-0.5 h-4 rounded-full" style={{ backgroundColor: currentTheme.accent }}></div><h3 className="text-[15px] font-serif font-black text-gray-800 tracking-tight">编辑概览</h3></div>
+                    <button onClick={() => setShowConfig(false)} className="text-gray-300 hover:text-black"><X size={16}/></button>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.1em] pl-1">项目标题</label>
-                      <input value={data.mainTitle} onChange={e => updateDataField('mainTitle', e.target.value)} className="w-full bg-black/[0.03] px-3 py-2.5 rounded-[16px] text-[11px] font-serif font-black outline-none focus:bg-white border border-transparent focus:border-black/[0.05] transition-all" />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.1em] pl-1">作者姓名</label>
-                      <input value={data.author} onChange={e => updateDataField('author', e.target.value)} className="w-full bg-black/[0.03] px-3 py-2.5 rounded-[16px] text-[11px] font-black outline-none focus:bg-white border border-transparent focus:border-black/[0.05] transition-all" />
-                    </div>
+                    <div className="space-y-1"><label className="text-[10px] font-black text-gray-400 pl-1 uppercase">项目标题</label><input value={data.mainTitle} onChange={e => updateDataField('mainTitle', e.target.value)} className="w-full bg-black/[0.03] px-3 py-2.5 rounded-[16px] text-[11px] font-serif font-black outline-none transition-all" /></div>
+                    <div className="space-y-1"><label className="text-[10px] font-black text-gray-400 pl-1 uppercase">作者姓名</label><input value={data.author} onChange={e => updateDataField('author', e.target.value)} className="w-full bg-black/[0.03] px-3 py-2.5 rounded-[16px] text-[11px] font-black outline-none transition-all" /></div>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.1em] pl-1">总结类型</label>
-                      <input value={data.summaryType} onChange={e => updateDataField('summaryType', e.target.value)} className="w-full bg-black/[0.03] px-3 py-2.5 rounded-[16px] text-[11px] font-bold outline-none focus:bg-white border border-transparent focus:border-black/[0.05] transition-all" />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.1em] pl-1">项目年份</label>
-                      <input value={data.year} onChange={e => updateDataField('year', e.target.value)} className="w-full bg-black/[0.03] px-3 py-2.5 rounded-[16px] text-[11px] font-mono font-black outline-none focus:bg-white border border-transparent focus:border-black/[0.05] transition-all" />
-                    </div>
+                    <div className="space-y-1"><label className="text-[10px] font-black text-gray-400 pl-1 uppercase">总结类型</label><input value={data.summaryType} onChange={e => updateDataField('summaryType', e.target.value)} className="w-full bg-black/[0.03] px-3 py-2.5 rounded-[16px] text-[11px] font-bold outline-none transition-all" /></div>
+                    <div className="space-y-1"><label className="text-[10px] font-black text-gray-400 pl-1 uppercase">项目年份</label><input value={data.year} onChange={e => updateDataField('year', e.target.value)} className="w-full bg-black/[0.03] px-3 py-2.5 rounded-[16px] text-[11px] font-mono font-black outline-none transition-all" /></div>
                   </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.1em] pl-1">总结前言</label>
-                    <textarea value={data.intro} onChange={e => updateDataField('intro', e.target.value)} className="w-full bg-black/[0.03] px-3 py-3 rounded-[16px] text-[11px] font-serif font-medium outline-none focus:bg-white border border-transparent focus:border-black/[0.05] transition-all min-h-[100px] leading-relaxed resize-none" placeholder="填写总结前言..." />
-                  </div>
+                  <div className="space-y-1"><label className="text-[10px] font-black text-gray-400 pl-1 uppercase">总结前言</label><textarea value={data.intro} onChange={e => updateDataField('intro', e.target.value)} className="w-full bg-black/[0.03] px-3 py-3 rounded-[16px] text-[11px] font-serif outline-none transition-all min-h-[100px] resize-none" placeholder="填写总结前言..." /></div>
                 </div>
               </div>
             )}
-            <button onClick={(e) => { e.stopPropagation(); setShowConfig(!showConfig); setShowTagManager(false); setShowThemePicker(false); setShowExportMenu(false); }} className={`flex flex-col items-center gap-0.5 transition-colors ${showConfig ? 'text-black' : 'text-black/40'}`}>
-              <Settings2 size={18} />
-              <span className="text-[10px] font-bold">设定</span>
-            </button>
+            <button onClick={(e) => { e.stopPropagation(); setShowConfig(!showConfig); setShowTagManager(false); setShowThemePicker(false); setShowExportMenu(false); }} className={`flex flex-col items-center gap-0.5 transition-colors ${showConfig ? 'text-black' : 'text-black/40'}`}><Settings2 size={18} /><span className="text-[10px] font-bold">设定</span></button>
           </div>
-
           <div className="relative">
             {showTagManager && (
               <div className={POPUP_WRAPPER_CLASS} onClick={e => e.stopPropagation()}>
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-[15px] font-serif font-black text-gray-800">库管理</h3>
-                    <button onClick={() => setShowTagManager(false)} className="text-gray-300 hover:text-black"><X size={16} /></button>
-                  </div>
-                  
+                  <div className="flex items-center justify-between"><h3 className="text-[15px] font-serif font-black text-gray-800">库管理</h3><button onClick={() => setShowTagManager(false)} className="text-gray-300 hover:text-black"><X size={16} /></button></div>
                   <div className="space-y-5 max-h-[360px] overflow-y-auto no-scrollbar pr-1">
-                    <div className="space-y-2.5">
-                      <label className="text-[10px] font-black text-black/40 uppercase tracking-widest pl-1">分类存储</label>
-                      <div className="flex flex-wrap gap-2">
-                        {data.savedCategories.map((cat, i) => (
-                          <div key={i} className="flex items-center gap-1.5 bg-black/[0.02] border border-black/5 px-3 py-1.5 rounded-full text-[11px] font-black group">
-                            {cat}
-                            <button onClick={() => setData(prev => ({...prev, savedCategories: prev.savedCategories.filter(c => c !== cat)}))} className="text-gray-300 hover:text-red-500"><X size={12} /></button>
-                          </div>
-                        ))}
-                      </div>
-                      <div className="flex gap-2 pt-1">
-                        <input value={newCatInput} onChange={e => setNewCatInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && addCategory()} placeholder="新分类" className="flex-1 bg-black/[0.03] rounded-[12px] px-3 py-2 text-[11px] font-bold outline-none" />
-                        <button onClick={addCategory} className="bg-black text-white w-9 h-9 flex items-center justify-center rounded-[12px] shrink-0"><Plus size={16} /></button>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2.5">
-                      <label className="text-[10px] font-black text-black/40 uppercase tracking-widest pl-1">形式标签</label>
-                      <div className="flex flex-wrap gap-2">
-                        {data.savedTypes.map((t, i) => (
-                          <div key={i} className="flex items-center gap-1.5 bg-black/[0.02] border border-black/5 px-3 py-1.5 rounded-full text-[11px] font-black italic group">
-                            {t}
-                            <button onClick={() => setData(prev => ({...prev, savedTypes: prev.savedTypes.filter(st => st !== t)}))} className="text-gray-300 hover:text-red-500"><X size={12} /></button>
-                          </div>
-                        ))}
-                      </div>
-                      <div className="flex gap-2 pt-1">
-                        <input value={newTypeInput} onChange={e => setNewTypeInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && addType()} placeholder="新形式" className="flex-1 bg-black/[0.03] rounded-[12px] px-3 py-2 text-[11px] font-bold outline-none" />
-                        <button onClick={addType} className="bg-black text-white w-9 h-9 flex items-center justify-center rounded-[12px] shrink-0"><Plus size={16} /></button>
-                      </div>
-                    </div>
+                    <div className="space-y-2.5"><label className="text-[10px] font-black text-black/40 uppercase tracking-widest pl-1">分类存储</label><div className="flex flex-wrap gap-2">{data.savedCategories.map((cat, i) => (<div key={i} className="flex items-center gap-1.5 bg-black/[0.02] border border-black/5 px-3 py-1.5 rounded-full text-[11px] font-black">{cat}<button onClick={() => setData(prev => ({...prev, savedCategories: prev.savedCategories.filter(c => c !== cat)}))} className="text-gray-300 hover:text-red-500"><X size={12} /></button></div>)) }</div><div className="flex gap-2 pt-1"><input value={newCatInput} onChange={e => setNewCatInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && addCategory()} placeholder="新分类" className="flex-1 bg-black/[0.03] rounded-[12px] px-3 py-2 text-[11px] font-bold outline-none" /><button onClick={addCategory} className="bg-black text-white w-9 h-9 flex items-center justify-center rounded-[12px]"><Plus size={16} /></button></div></div>
+                    <div className="space-y-2.5"><label className="text-[10px] font-black text-black/40 uppercase tracking-widest pl-1">形式标签</label><div className="flex flex-wrap gap-2">{data.savedTypes.map((t, i) => (<div key={i} className="flex items-center gap-1.5 bg-black/[0.02] border border-black/5 px-3 py-1.5 rounded-full text-[11px] font-black italic">{t}<button onClick={() => setData(prev => ({...prev, savedTypes: prev.savedTypes.filter(st => st !== t)}))} className="text-gray-300 hover:text-red-500"><X size={12} /></button></div>))}</div><div className="flex gap-2 pt-1"><input value={newTypeInput} onChange={e => setNewTypeInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && addType()} placeholder="新形式" className="flex-1 bg-black/[0.03] rounded-[12px] px-3 py-2 text-[11px] font-bold outline-none" /><button onClick={addType} className="bg-black text-white w-9 h-9 flex items-center justify-center rounded-[12px]"><Plus size={16} /></button></div></div>
                   </div>
                 </div>
               </div>
             )}
-            <button onClick={(e) => { e.stopPropagation(); setShowTagManager(!showTagManager); setShowConfig(false); setShowThemePicker(false); setShowExportMenu(false); }} className={`flex flex-col items-center gap-0.5 transition-colors ${showTagManager ? 'text-black' : 'text-black/40'}`}>
-              <Tags size={18} />
-              <span className="text-[10px] font-bold">库</span>
-            </button>
+            <button onClick={(e) => { e.stopPropagation(); setShowTagManager(!showTagManager); setShowConfig(false); setShowThemePicker(false); setShowExportMenu(false); }} className={`flex flex-col items-center gap-0.5 transition-colors ${showTagManager ? 'text-black' : 'text-black/40'}`}><Tags size={18} /><span className="text-[10px] font-bold">库</span></button>
           </div>
-
-          <button onClick={(e) => { e.stopPropagation(); addNewItem(); }} className="w-10 h-10 bg-[#1A1A1A] rounded-full flex items-center justify-center text-white active:scale-90 shadow-xl shrink-0 transition-transform">
-            <Plus size={20} strokeWidth={3} />
-          </button>
-
+          <button onClick={(e) => { e.stopPropagation(); addNewItem(); }} className="w-10 h-10 bg-[#1A1A1A] rounded-full flex items-center justify-center text-white shadow-xl transition-transform"><Plus size={20} strokeWidth={3} /></button>
           <div className="relative">
             {showThemePicker && (
               <div className={POPUP_WRAPPER_CLASS} onClick={e => e.stopPropagation()}>
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-[15px] font-serif font-black text-gray-800">切换主题</h3>
-                    <button onClick={() => setShowThemePicker(false)} className="text-gray-300 hover:text-black"><X size={16} /></button>
-                  </div>
+                  <div className="flex items-center justify-between"><h3 className="text-[15px] font-serif font-black text-gray-800">切换主题</h3><button onClick={() => setShowThemePicker(false)} className="text-gray-300 hover:text-black"><X size={16} /></button></div>
                   <div className="grid grid-cols-2 gap-2">
-                    {THEMES.map(t => (
-                      <button 
-                        key={t.id} 
-                        onClick={() => { setData({...data, themeId: t.id}); setShowThemePicker(false); }} 
-                        className={`flex items-center gap-3 p-3 rounded-[18px] transition-all border ${data.themeId === t.id ? 'bg-black/[0.05] border-black/10' : 'bg-black/[0.01] border-transparent hover:bg-black/[0.03]'}`}
-                      >
-                        <div className="w-5 h-5 rounded-full border border-black/5" style={{ backgroundColor: t.accent }}></div>
-                        <span className={`text-[12px] font-black ${data.themeId === t.id ? 'text-black' : 'text-gray-400'}`}>{t.name}</span>
-                        {data.themeId === t.id && <Check size={14} className="ml-auto opacity-50" />}
-                      </button>
-                    ))}
+                    {THEMES.map(t => (<button key={t.id} onClick={() => { setData({...data, themeId: t.id}); setShowThemePicker(false); }} className={`flex items-center gap-3 p-3 rounded-[18px] transition-all border ${data.themeId === t.id ? 'bg-black/[0.05] border-black/10' : 'bg-black/[0.01] border-transparent'}`}><div className="w-5 h-5 rounded-full" style={{ backgroundColor: t.accent }}></div><span className={`text-[12px] font-black ${data.themeId === t.id ? 'text-black' : 'text-gray-400'}`}>{t.name}</span>{data.themeId === t.id && <Check size={14} className="ml-auto opacity-50" />}</button>))}
                   </div>
                 </div>
               </div>
             )}
-            <button onClick={(e) => { e.stopPropagation(); setShowThemePicker(!showThemePicker); setShowConfig(false); setShowTagManager(false); setShowExportMenu(false); }} className={`flex flex-col items-center gap-0.5 transition-colors ${showThemePicker ? 'text-black' : 'text-black/40'}`}>
-              <Palette size={18} />
-              <span className="text-[10px] font-bold">主题</span>
-            </button>
+            <button onClick={(e) => { e.stopPropagation(); setShowThemePicker(!showThemePicker); setShowConfig(false); setShowTagManager(false); setShowExportMenu(false); }} className={`flex flex-col items-center gap-0.5 transition-colors ${showThemePicker ? 'text-black' : 'text-black/40'}`}><Palette size={18} /><span className="text-[10px] font-bold">主题</span></button>
           </div>
-          
           <div className="relative">
             {showExportMenu && (
               <div className={POPUP_WRAPPER_CLASS} onClick={e => e.stopPropagation()}>
                 {exportSubMode === 'main' ? (
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-[15px] font-serif font-black text-gray-800">导出发布</h3>
-                      <button onClick={() => setShowExportMenu(false)} className="text-gray-300 hover:text-black"><X size={16} /></button>
-                    </div>
+                    <div className="flex items-center justify-between"><h3 className="text-[15px] font-serif font-black text-gray-800">导出发布</h3><button onClick={() => setShowExportMenu(false)} className="text-gray-300 hover:text-black"><X size={16} /></button></div>
                     <div className="flex flex-col gap-2">
-                      <button onClick={handleExportLong} className="flex items-center gap-3 p-4 bg-black/[0.02] hover:bg-black/[0.05] rounded-[18px] transition-all">
-                        <Layers size={20} className="opacity-40" />
-                        <span className="font-black text-[13px] text-gray-800">生成 1440px 完整长图</span>
-                      </button>
-                      <button onClick={() => setExportSubMode('select')} className="flex items-center gap-3 p-4 bg-black/[0.02] hover:bg-black/[0.05] rounded-[18px] transition-all">
-                        <CheckSquare size={20} className="opacity-40" />
-                        <span className="font-black text-[13px] text-gray-800">选择特定模块生成预览图</span>
-                      </button>
+                      <button onClick={handleExportLong} className="flex items-center gap-3 p-4 bg-black/[0.02] hover:bg-black/[0.05] rounded-[18px] transition-all"><Layers size={20} className="opacity-40" /><span className="font-black text-[13px] text-gray-800">生成 1440px 完整长图</span></button>
+                      <button onClick={() => setExportSubMode('select')} className="flex items-center gap-3 p-4 bg-black/[0.02] hover:bg-black/[0.05] rounded-[18px] transition-all"><CheckSquare size={20} className="opacity-40" /><span className="font-black text-[13px] text-gray-800">选择特定模块生成预览图</span></button>
                     </div>
                   </div>
                 ) : (
                   <div className="space-y-4 min-h-[220px] flex flex-col">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <button onClick={() => setExportSubMode('main')} className="text-gray-400 hover:text-black"><ChevronLeft size={20} /></button>
-                        <h3 className="text-[15px] font-serif font-black text-gray-800">勾选模块 ({selectedItemIds.length})</h3>
-                      </div>
-                      <button onClick={() => setShowExportMenu(false)} className="text-gray-300 hover:text-black"><X size={16} /></button>
-                    </div>
+                    <div className="flex items-center justify-between"><div className="flex items-center gap-2"><button onClick={() => setExportSubMode('main')} className="text-gray-400"><ChevronLeft size={20} /></button><h3 className="text-[15px] font-serif font-black text-gray-800">勾选模块 ({selectedItemIds.length})</h3></div><button onClick={() => setShowExportMenu(false)} className="text-gray-300 hover:text-black"><X size={16} /></button></div>
                     <div className="grid grid-cols-5 gap-2 overflow-y-auto no-scrollbar max-h-40 p-1">
-                      {data.items.map((item, i) => {
-                        const isSelected = selectedItemIds.includes(item.id);
-                        return (
-                          <button key={item.id} onClick={() => toggleItemSelection(item.id)} className={`h-10 rounded-[12px] font-mono font-black text-[12px] transition-all border ${isSelected ? 'bg-black border-black text-white' : 'bg-black/[0.02] border-black/5 text-gray-300'}`}>
-                            {String(i + 1).padStart(2, '0')}
-                          </button>
-                        );
-                      })}
+                      {data.items.map((item, i) => (<button key={item.id} onClick={() => toggleItemSelection(item.id)} className={`h-10 rounded-[12px] font-mono font-black text-[12px] transition-all border ${selectedItemIds.includes(item.id) ? 'bg-black border-black text-white' : 'bg-black/[0.02] border-black/5 text-gray-300'}`}>{String(i + 1).padStart(2, '0')}</button>))}
                     </div>
-                    <button onClick={handleExportSelectedPreview} className="w-full bg-black text-white py-4 rounded-[18px] font-black text-[14px] flex items-center justify-center gap-2 mt-auto shadow-xl active:scale-[0.98] transition-transform">
-                      生成发布 <ArrowRight size={16} />
-                    </button>
+                    <button onClick={handleExportSelectedPreview} className="w-full bg-black text-white py-4 rounded-[18px] font-black text-[14px] flex items-center justify-center gap-2 mt-auto shadow-xl">生成发布 <ArrowRight size={16} /></button>
                   </div>
                 )}
               </div>
             )}
-            <button onClick={(e) => { e.stopPropagation(); setShowExportMenu(!showExportMenu); if(!showExportMenu) { setExportSubMode('main'); setSelectedItemIds([]); } setShowThemePicker(false); setShowConfig(false); setShowTagManager(false); }} disabled={isExporting} className={`flex flex-col items-center gap-0.5 transition-colors ${showExportMenu ? 'text-black' : 'text-black/40'}`}>
-              {isExporting ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
-              <span className="text-[10px] font-bold">发布</span>
-            </button>
+            <button onClick={(e) => { e.stopPropagation(); setShowExportMenu(!showExportMenu); if(!showExportMenu) { setExportSubMode('main'); setSelectedItemIds([]); } setShowThemePicker(false); setShowConfig(false); setShowTagManager(false); }} disabled={isExporting} className={`flex flex-col items-center gap-0.5 transition-colors ${showExportMenu ? 'text-black' : 'text-black/40'}`}>{isExporting ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}<span className="text-[10px] font-bold">发布</span></button>
           </div>
         </footer>
       </div>
@@ -1124,27 +1064,10 @@ const App = () => {
         <div className="fixed inset-0 z-[600] flex flex-col" style={{ backgroundColor: currentTheme.bg }}>
           <div className="h-14 flex items-center justify-between px-6 bg-white/40 backdrop-blur-2xl shrink-0 border-b border-black/5">
             <button onClick={() => { previewUrls.forEach(URL.revokeObjectURL); setIsPreviewing(false); }} className="font-bold flex items-center gap-2 text-[14px]" style={{ color: currentTheme.text }}><ChevronLeft size={18} /> 返回</button>
-            <button 
-              onClick={() => {
-                previewUrls.forEach((url, i) => {
-                  const link = document.createElement('a');
-                  link.download = `年度总结_${data.year}_${i+1}.png`;
-                  link.href = url;
-                  link.click();
-                });
-              }} 
-              className="text-white px-4 py-1.5 rounded-full font-black text-[11px] shadow-lg" 
-              style={{ backgroundColor: currentTheme.accent }}
-            >
-              保存图片
-            </button>
+            <button onClick={() => { previewUrls.forEach((url, i) => { const link = document.createElement('a'); link.download = `年度总结_${data.year}_${i+1}.png`; link.href = url; link.click(); }); }} className="text-white px-4 py-1.5 rounded-full font-black text-[11px] shadow-lg" style={{ backgroundColor: currentTheme.accent }}>保存图片</button>
           </div>
           <div className="flex-1 overflow-y-auto no-scrollbar p-6 space-y-8 pb-32">
-            {previewUrls.map((url, i) => (
-              <div key={i} className="w-full max-w-[1440px] mx-auto shadow-2xl rounded-[24px] overflow-hidden bg-white/20 border border-white/20">
-                <img src={url} alt={`PREVIEW ${i}`} className="w-full h-auto block" style={{ objectFit: 'contain' }} />
-              </div>
-            ))}
+            {previewUrls.map((url, i) => (<div key={i} className="w-full max-w-[1440px] mx-auto shadow-2xl rounded-[24px] overflow-hidden bg-white/20 border border-white/20"><img src={url} alt={`PREVIEW ${i}`} className="w-full h-auto block" style={{ objectFit: 'contain' }} /></div>))}
           </div>
         </div>
       )}
