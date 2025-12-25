@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { 
@@ -78,7 +77,7 @@ const COLOR_PRESETS = [
 const TEXTURE_URL = `url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAMAAAAp4XiDAAAAUVBMVEWFhYWDg4N3dyZlZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZiZ6Np9LAAAAFnRSTlMAp79vj6uXm59/f39/f39/f39/f39/f398C9mBAAAAelURBVDjL7ZFBCsAwDMNisv//766mS7vtoYORXAiBhC8m8mIyLybyYiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJi8m/mBfNNCFmS0XyXAAAAAElFTkSuQmCC")`;
 
 const DEFAULT_TEXT = '';
-const GET_CURRENT_DATE = () => new Date().toISOString().split('T')[0].replace(/-/g, '.');
+const GET_CURRENT_DATE = () => new Date().getFullYear().toString();
 
 const InlinePicker = ({ 
   id, 
@@ -103,15 +102,15 @@ const InlinePicker = ({
 }) => {
   const list = type === 'category' ? savedCategories : savedTypes;
   return (
-    <div className="absolute top-[calc(100%+20px)] left-0 z-[100] w-[540px] bg-white/95 backdrop-blur-3xl rounded-[32px] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.25)] border border-white/80 p-4 animate-in fade-in zoom-in slide-in-from-top-3 duration-500 origin-top-left" onClick={e => e.stopPropagation()}>
-      <div className="px-5 pt-4 pb-3 border-b border-black/[0.06] mb-1 flex justify-between items-center">
-        <span className="text-[18px] font-black tracking-[0.1em] opacity-40">{type === 'category' ? '分类索引' : '作品形式'}</span>
-        <div className="flex gap-1.5">
+    <div className="absolute top-[calc(100%+20px)] left-0 z-[100] w-[300px] bg-white/95 backdrop-blur-3xl rounded-[24px] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.25)] border border-white/80 p-3 animate-in fade-in zoom-in slide-in-from-top-3 duration-500 origin-top-left" onClick={e => e.stopPropagation()}>
+      <div className="px-4 pt-4 pb-3 border-b border-black/[0.04] mb-2 flex justify-between items-center">
+        <span className="text-[16px] font-black tracking-[0.15em] opacity-40 uppercase">{type === 'category' ? 'Category' : 'Work Type'}</span>
+        <div className="flex gap-2">
           <div className="w-1.5 h-1.5 rounded-full opacity-20" style={{ backgroundColor: currentTheme.accent }}></div>
-          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: currentTheme.accent }}></div>
+          <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: currentTheme.accent }}></div>
         </div>
       </div>
-      <div className="max-h-[460px] overflow-y-auto no-scrollbar py-0.5 space-y-0.5">
+      <div className="max-h-[380px] overflow-y-auto no-scrollbar py-0.5">
         {list.length > 0 ? list.map((val, i) => (
           <button 
             key={i} 
@@ -119,26 +118,26 @@ const InlinePicker = ({
               updateItemField(id, type, val);
               setActivePicker(null);
             }}
-            className={`w-full group relative flex items-start px-5 py-4 rounded-[22px] transition-all duration-500 ${val === currentVal ? 'bg-black/[0.06]' : 'hover:bg-black/[0.03] active:scale-[0.98]'}`}
+            className={`w-full group relative flex items-center px-4 py-4 rounded-[18px] transition-all duration-300 ${val === currentVal ? 'bg-black/[0.04]' : 'hover:bg-black/[0.02] active:scale-[0.99]'}`}
           >
-            <span className="text-[20px] font-mono font-black opacity-10 mr-5 group-hover:opacity-30 transition-opacity w-6 mt-3.5 shrink-0">{String(i + 1).padStart(2, '0')}</span>
-            <span className={`flex-1 text-[44px] font-black leading-[1.1] tracking-tighter break-all transition-all duration-300 ${type === 'type' ? 'italic font-serif' : ''}`} style={{ color: val === currentVal ? currentTheme.accent : 'inherit' }}>{val}</span>
+            {/* 放大序号装饰文本 */}
+            <span className="text-[22px] font-mono font-black opacity-15 mr-5 group-hover:opacity-30 transition-opacity w-6 shrink-0 text-center">{String(i + 1).padStart(2, '0')}</span>
+            <span className={`flex-1 text-[32px] font-black leading-tight tracking-tight break-all text-left ${type === 'type' ? 'italic font-serif' : ''}`} style={{ color: val === currentVal ? currentTheme.accent : 'inherit' }}>{val}</span>
             {val === currentVal && (
-              <div className="ml-2 mt-5 w-3.5 h-3.5 shrink-0 rounded-full shadow-[0_0_12px] transition-all" style={{ backgroundColor: currentTheme.accent, boxShadow: `0 0 12px ${currentTheme.accent}66` }}></div>
+              /* 放大选中指示元素 */
+              <div className="ml-2 w-3 h-3 shrink-0 rounded-full shadow-[0_0_12px]" style={{ backgroundColor: currentTheme.accent, boxShadow: `0 0 12px ${currentTheme.accent}55` }}></div>
             )}
           </button>
         )) : (
-          <div className="py-12 px-4 text-center flex flex-col items-center gap-5 animate-in fade-in duration-700">
-            <div className="w-14 h-14 rounded-full bg-black/5 flex items-center justify-center">
-              <PlusCircle size={30} className="text-black/10" />
-            </div>
-            <p className="text-[28px] font-black text-black/20 leading-none tracking-tighter italic">库内容为空</p>
-            <button onClick={() => { setActivePicker(null); setShowTagManager(true); }} className="text-[16px] font-black tracking-[0.1em] text-black/50 hover:text-black transition-colors border-b-2 border-black/10 pb-0.5">前往初始化</button>
+          <div className="py-10 px-4 text-center flex flex-col items-center gap-5">
+            <PlusCircle size={32} className="text-black/10" />
+            <p className="text-[16px] font-black text-black/20 italic tracking-widest uppercase">Null Archive</p>
+            <button onClick={() => { setActivePicker(null); setShowTagManager(true); }} className="text-[13px] font-black tracking-[0.1em] text-black/50 hover:text-black transition-colors border-b-2 border-black/10 pb-0.5">Init Library</button>
           </div>
         )}
       </div>
-      <div className="mt-1 p-2 bg-black/[0.02] rounded-b-[24px] flex justify-center border-t border-black/[0.02]">
-         <div className="w-12 h-1 rounded-full bg-black/5"></div>
+      <div className="mt-1 p-2 bg-black/[0.01] rounded-b-[24px] flex justify-center">
+         <div className="w-10 h-1 rounded-full bg-black/5"></div>
       </div>
     </div>
   );
@@ -906,96 +905,87 @@ const App = () => {
         <footer className="h-14 flex items-center justify-around px-4 safe-area-bottom shrink-0">
           <div className="relative">
             {showConfig && (
-              <div className="absolute bottom-[110%] left-[0px] mb-5 w-[calc(100vw-32px)] max-w-[270px] bg-white/85 backdrop-blur-3xl rounded-[40px] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.3)] border border-white/60 p-4 animate-in slide-in-from-bottom-3 fade-in duration-500 z-[300]" onClick={e => e.stopPropagation()}>
+              <div className="absolute bottom-[110%] left-[0px] mb-4 w-[calc(100vw-32px)] max-w-[270px] bg-white/90 backdrop-blur-3xl rounded-[24px] shadow-[0_20px_60px_-10px_rgba(0,0,0,0.15)] border border-white/60 p-4 animate-in slide-in-from-bottom-2 fade-in duration-300 z-[300]" onClick={e => e.stopPropagation()}>
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <div className="w-1 h-5 rounded-full" style={{ backgroundColor: currentTheme.accent }}></div>
+                      <div className="w-0.5 h-4 rounded-full" style={{ backgroundColor: currentTheme.accent }}></div>
                       <h3 className="text-[15px] font-serif font-black text-gray-800 tracking-tight">编辑概览</h3>
                     </div>
-                    <button onClick={() => setShowConfig(false)} className="text-gray-300 hover:text-black transition-colors"><X size={18}/></button>
+                    <button onClick={() => setShowConfig(false)} className="text-gray-300 hover:text-black transition-colors"><X size={16}/></button>
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 gap-2.5">
                     <div className="space-y-1">
-                      <label className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] pl-1">项目标题</label>
-                      <input value={data.mainTitle} onChange={e => updateDataField('mainTitle', e.target.value)} className="w-full bg-black/[0.03] px-4 py-2 rounded-[16px] text-[10px] font-serif font-black outline-none focus:bg-white border border-transparent focus:border-black/[0.05] transition-all" />
+                      <label className="text-[9px] font-black text-gray-400 uppercase tracking-[0.1em] pl-1">项目标题</label>
+                      <input value={data.mainTitle} onChange={e => updateDataField('mainTitle', e.target.value)} className="w-full bg-black/[0.03] px-3 py-2 rounded-[12px] text-[10px] font-serif font-black outline-none focus:bg-white border border-transparent focus:border-black/[0.05] transition-all" />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] pl-1">作者姓名</label>
-                      <input value={data.author} onChange={e => updateDataField('author', e.target.value)} className="w-full bg-black/[0.03] px-4 py-2 rounded-[16px] text-[10px] font-black outline-none focus:bg-white border border-transparent focus:border-black/[0.05] transition-all" />
+                      <label className="text-[9px] font-black text-gray-400 uppercase tracking-[0.1em] pl-1">作者姓名</label>
+                      <input value={data.author} onChange={e => updateDataField('author', e.target.value)} className="w-full bg-black/[0.03] px-3 py-2 rounded-[12px] text-[10px] font-black outline-none focus:bg-white border border-transparent focus:border-black/[0.05] transition-all" />
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 gap-2.5">
                     <div className="space-y-1">
-                      <label className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] pl-1">总结类型</label>
-                      <input value={data.summaryType} onChange={e => updateDataField('summaryType', e.target.value)} className="w-full bg-black/[0.03] px-4 py-2 rounded-[16px] text-[10px] font-bold outline-none focus:bg-white border border-transparent focus:border-black/[0.05] transition-all" />
+                      <label className="text-[9px] font-black text-gray-400 uppercase tracking-[0.1em] pl-1">总结类型</label>
+                      <input value={data.summaryType} onChange={e => updateDataField('summaryType', e.target.value)} className="w-full bg-black/[0.03] px-3 py-2 rounded-[12px] text-[10px] font-bold outline-none focus:bg-white border border-transparent focus:border-black/[0.05] transition-all" />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] pl-1">项目年份</label>
-                      <input value={data.year} onChange={e => updateDataField('year', e.target.value)} className="w-full bg-black/[0.03] px-4 py-2 rounded-[16px] text-[10px] font-mono font-black outline-none focus:bg-white border border-transparent focus:border-black/[0.05] transition-all" />
+                      <label className="text-[9px] font-black text-gray-400 uppercase tracking-[0.1em] pl-1">项目年份</label>
+                      <input value={data.year} onChange={e => updateDataField('year', e.target.value)} className="w-full bg-black/[0.03] px-3 py-2 rounded-[12px] text-[10px] font-mono font-black outline-none focus:bg-white border border-transparent focus:border-black/[0.05] transition-all" />
                     </div>
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] pl-1">总结前言</label>
-                    <textarea value={data.intro} onChange={e => updateDataField('intro', e.target.value)} className="w-full bg-black/[0.03] px-4 py-3 rounded-[20px] text-[10px] font-serif font-medium outline-none focus:bg-white border border-transparent focus:border-black/[0.05] transition-all min-h-[80px] leading-relaxed resize-none" placeholder="填写总结前言或寄语..." />
+                    <label className="text-[9px] font-black text-gray-400 uppercase tracking-[0.1em] pl-1">总结前言</label>
+                    <textarea value={data.intro} onChange={e => updateDataField('intro', e.target.value)} className="w-full bg-black/[0.03] px-3 py-2.5 rounded-[16px] text-[10px] font-serif font-medium outline-none focus:bg-white border border-transparent focus:border-black/[0.05] transition-all min-h-[70px] leading-relaxed resize-none" placeholder="填写总结前言..." />
                   </div>
                 </div>
               </div>
             )}
             <button onClick={(e) => { e.stopPropagation(); setShowConfig(!showConfig); setShowTagManager(false); setShowThemePicker(false); setShowExportMenu(false); }} className={`flex flex-col items-center gap-0.5 transition-colors ${showConfig ? 'text-black' : 'text-black/40'}`}>
-              <Settings2 size={20} />
+              <Settings2 size={18} />
               <span className="text-[10px] font-bold">设定</span>
             </button>
           </div>
 
           <div className="relative">
             {showTagManager && (
-              <div className="absolute bottom-[110%] left-[-40px] mb-5 w-[calc(100vw-32px)] max-w-[290px] bg-white/85 backdrop-blur-3xl rounded-[40px] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.3)] border border-white/60 p-4 animate-in slide-in-from-bottom-3 fade-in duration-500 z-[300]" onClick={e => e.stopPropagation()}>
-                <div className="space-y-4">
+              <div className="absolute bottom-[110%] left-1/2 -translate-x-1/2 mb-4 w-[calc(100vw-32px)] max-w-[290px] bg-white/90 backdrop-blur-3xl rounded-[24px] shadow-[0_20px_60px_-10px_rgba(0,0,0,0.15)] border border-white/60 p-4 animate-in slide-in-from-bottom-2 fade-in duration-300 z-[300]" onClick={e => e.stopPropagation()}>
+                <div className="space-y-3.5">
                   <div className="flex items-center justify-between">
-                    <div className="flex flex-col">
-                      <h3 className="text-[18px] font-serif font-black text-gray-800 leading-none">库管理</h3>
-                      <span className="text-[10px] font-bold tracking-[0.1em] opacity-30 mt-1">标签与分类存储库</span>
-                    </div>
-                    <button onClick={() => setShowTagManager(false)} className="text-gray-300 hover:text-black"><X size={18} /></button>
+                    <h3 className="text-[15px] font-serif font-black text-gray-800">库管理</h3>
+                    <button onClick={() => setShowTagManager(false)} className="text-gray-300 hover:text-black"><X size={16} /></button>
                   </div>
                   
-                  <div className="space-y-4 max-h-[360px] overflow-y-auto no-scrollbar pr-1">
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between pl-1">
-                        <label className="text-[11px] font-black text-black/60 uppercase tracking-[0.1em] shrink-0">全部分类</label>
-                        <div className="h-[1px] flex-1 mx-4 bg-black/[0.05]"></div>
-                      </div>
+                  <div className="space-y-4 max-h-[320px] overflow-y-auto no-scrollbar pr-1">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-black/40 uppercase tracking-widest pl-1">分类存储</label>
                       <div className="flex flex-wrap gap-1.5">
                         {data.savedCategories.map((cat, i) => (
-                          <div key={i} className="flex items-center gap-1.5 bg-black/[0.03] border border-white px-3 py-1.5 rounded-full text-[11px] font-black group hover:bg-black/[0.06] transition-all break-all">
+                          <div key={i} className="flex items-center gap-1.5 bg-black/[0.02] border border-black/5 px-2.5 py-1 rounded-full text-[10px] font-black group">
                             {cat}
-                            <button onClick={() => setData(prev => ({...prev, savedCategories: prev.savedCategories.filter(c => c !== cat)}))} className="text-gray-300 hover:text-red-500 transition-colors shrink-0"><X size={12} /></button>
+                            <button onClick={() => setData(prev => ({...prev, savedCategories: prev.savedCategories.filter(c => c !== cat)}))} className="text-gray-300 hover:text-red-500"><X size={10} /></button>
                           </div>
                         ))}
                       </div>
-                      <div className="flex gap-1.5">
-                        <input value={newCatInput} onChange={e => setNewCatInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && addCategory()} placeholder="新分类..." className="flex-1 bg-black/[0.03] rounded-[14px] px-3 py-2 text-[10px] font-bold outline-none focus:bg-white border border-transparent focus:border-black/[0.05] transition-all" />
-                        <button onClick={addCategory} className="bg-black text-white w-8 h-8 flex items-center justify-center rounded-[12px] active:scale-90 transition-transform shrink-0"><Plus size={14} /></button>
+                      <div className="flex gap-1.5 pt-1">
+                        <input value={newCatInput} onChange={e => setNewCatInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && addCategory()} placeholder="新分类" className="flex-1 bg-black/[0.03] rounded-[10px] px-3 py-1.5 text-[10px] font-bold outline-none" />
+                        <button onClick={addCategory} className="bg-black text-white w-7 h-7 flex items-center justify-center rounded-[8px] shrink-0"><Plus size={12} /></button>
                       </div>
                     </div>
 
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between pl-1">
-                        <label className="text-[11px] font-black text-black/60 uppercase tracking-[0.1em] shrink-0">作品标签</label>
-                        <div className="h-[1px] flex-1 mx-4 bg-black/[0.05]"></div>
-                      </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-black/40 uppercase tracking-widest pl-1">形式标签</label>
                       <div className="flex flex-wrap gap-1.5">
                         {data.savedTypes.map((t, i) => (
-                          <div key={i} className="flex items-center gap-1.5 bg-black/[0.03] border border-white px-3 py-1.5 rounded-full text-[11px] font-black italic group hover:bg-black/[0.06] transition-all break-all">
+                          <div key={i} className="flex items-center gap-1.5 bg-black/[0.02] border border-black/5 px-2.5 py-1 rounded-full text-[10px] font-black italic group">
                             {t}
-                            <button onClick={() => setData(prev => ({...prev, savedTypes: prev.savedTypes.filter(st => st !== t)}))} className="text-gray-300 hover:text-red-500 transition-colors shrink-0"><X size={12} /></button>
+                            <button onClick={() => setData(prev => ({...prev, savedTypes: prev.savedTypes.filter(st => st !== t)}))} className="text-gray-300 hover:text-red-500"><X size={10} /></button>
                           </div>
                         ))}
                       </div>
-                      <div className="flex gap-1.5">
-                        <input value={newTypeInput} onChange={e => setNewTypeInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && addType()} placeholder="新标签..." className="flex-1 bg-black/[0.03] rounded-[14px] px-3 py-2 text-[10px] font-bold outline-none focus:bg-white border border-transparent focus:border-black/[0.05] transition-all" />
-                        <button onClick={addType} className="bg-black text-white w-8 h-8 flex items-center justify-center rounded-[12px] active:scale-90 transition-transform shrink-0"><Plus size={14} /></button>
+                      <div className="flex gap-1.5 pt-1">
+                        <input value={newTypeInput} onChange={e => setNewTypeInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && addType()} placeholder="新形式" className="flex-1 bg-black/[0.03] rounded-[10px] px-3 py-1.5 text-[10px] font-bold outline-none" />
+                        <button onClick={addType} className="bg-black text-white w-7 h-7 flex items-center justify-center rounded-[8px] shrink-0"><Plus size={12} /></button>
                       </div>
                     </div>
                   </div>
@@ -1003,79 +993,78 @@ const App = () => {
               </div>
             )}
             <button onClick={(e) => { e.stopPropagation(); setShowTagManager(!showTagManager); setShowConfig(false); setShowThemePicker(false); setShowExportMenu(false); }} className={`flex flex-col items-center gap-0.5 transition-colors ${showTagManager ? 'text-black' : 'text-black/40'}`}>
-              <Tags size={20} />
-              <span className="text-[10px] font-bold">标签</span>
+              <Tags size={18} />
+              <span className="text-[10px] font-bold">库</span>
             </button>
           </div>
 
-          <button onClick={(e) => { e.stopPropagation(); addNewItem(); }} className="w-12 h-12 bg-[#1A1A1A] rounded-full flex items-center justify-center text-white active:scale-90 shadow-xl shrink-0 transition-transform">
-            <Plus size={24} strokeWidth={3} />
+          <button onClick={(e) => { e.stopPropagation(); addNewItem(); }} className="w-10 h-10 bg-[#1A1A1A] rounded-full flex items-center justify-center text-white active:scale-90 shadow-xl shrink-0 transition-transform">
+            <Plus size={20} strokeWidth={3} />
           </button>
 
           <div className="relative">
             {showThemePicker && (
-              <div className="absolute bottom-[110%] left-1/2 -translate-x-1/2 mb-5 w-[140px] bg-white/85 backdrop-blur-3xl rounded-[32px] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.3)] border border-white/60 p-2 animate-in slide-in-from-bottom-3 fade-in duration-500 z-[300]" onClick={e => e.stopPropagation()}>
-                <div className="flex flex-col gap-1">
+              <div className="absolute bottom-[110%] left-1/2 -translate-x-1/2 mb-4 w-[130px] bg-white/90 backdrop-blur-3xl rounded-[20px] shadow-[0_20px_60px_-10px_rgba(0,0,0,0.15)] border border-white/60 p-2 animate-in slide-in-from-bottom-2 fade-in duration-300 z-[300]" onClick={e => e.stopPropagation()}>
+                <div className="flex flex-col gap-0.5">
                   {THEMES.map(t => (
                     <button 
                       key={t.id} 
                       onClick={() => { setData({...data, themeId: t.id}); setShowThemePicker(false); }} 
-                      className={`flex items-center gap-2.5 p-2 rounded-[16px] transition-all ${data.themeId === t.id ? 'bg-black/[0.05]' : 'hover:bg-black/[0.02]'}`}
+                      className={`flex items-center gap-2 p-1.5 rounded-[12px] transition-all ${data.themeId === t.id ? 'bg-black/[0.05]' : 'hover:bg-black/[0.02]'}`}
                     >
-                      <div className="w-5 h-5 rounded-full border border-black/5 shadow-inner transition-transform group-hover:scale-110" style={{ backgroundColor: t.accent }}></div>
-                      <span className={`text-[10px] font-black tracking-tight ${data.themeId === t.id ? 'text-black' : 'text-gray-400'}`}>{t.name}</span>
-                      {data.themeId === t.id && <Check size={12} className="ml-auto opacity-40" />}
+                      <div className="w-4 h-4 rounded-full border border-black/5" style={{ backgroundColor: t.accent }}></div>
+                      <span className={`text-[10px] font-black ${data.themeId === t.id ? 'text-black' : 'text-gray-400'}`}>{t.name}</span>
+                      {data.themeId === t.id && <Check size={10} className="ml-auto opacity-30" />}
                     </button>
                   ))}
                 </div>
               </div>
             )}
             <button onClick={(e) => { e.stopPropagation(); setShowThemePicker(!showThemePicker); setShowConfig(false); setShowTagManager(false); setShowExportMenu(false); }} className={`flex flex-col items-center gap-0.5 transition-colors ${showThemePicker ? 'text-black' : 'text-black/40'}`}>
-              <Palette size={20} />
+              <Palette size={18} />
               <span className="text-[10px] font-bold">主题</span>
             </button>
           </div>
           
           <div className="relative">
             {showExportMenu && (
-              <div className="absolute bottom-[110%] right-[0px] mb-5 w-[130px] bg-white/85 backdrop-blur-3xl rounded-[32px] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.3)] border border-white/60 p-2 animate-in slide-in-from-bottom-3 fade-in duration-500 z-[300]" onClick={e => e.stopPropagation()}>
+              <div className="absolute bottom-[110%] left-1/2 -translate-x-1/2 mb-4 w-[130px] bg-white/90 backdrop-blur-3xl rounded-[20px] shadow-[0_20px_60px_-10px_rgba(0,0,0,0.15)] border border-white/60 p-2 animate-in slide-in-from-bottom-2 fade-in duration-300 z-[300]" onClick={e => e.stopPropagation()}>
                 {exportSubMode === 'main' ? (
-                  <div className="flex flex-col gap-1">
-                    <button onClick={handleExportLong} className="flex items-center gap-2 p-2.5 hover:bg-black/[0.04] rounded-[16px] transition-all group border-b border-black/[0.03] pb-2.5">
-                      <div className="w-6 h-6 rounded-full bg-black/5 flex items-center justify-center"><Layers size={14} /></div>
-                      <span className="font-black text-[10px] uppercase tracking-tight text-gray-800">完整长图</span>
+                  <div className="flex flex-col gap-0.5">
+                    <button onClick={handleExportLong} className="flex items-center gap-2 p-2 hover:bg-black/[0.03] rounded-[12px] transition-all">
+                      <Layers size={14} className="opacity-40" />
+                      <span className="font-black text-[10px] text-gray-800">完整长图</span>
                     </button>
-                    <button onClick={() => setExportSubMode('select')} className="flex items-center gap-2.5 p-2.5 hover:bg-black/[0.04] rounded-[16px] transition-all group">
-                      <div className="w-6 h-6 rounded-full bg-black/5 flex items-center justify-center"><CheckSquare size={14} /></div>
-                      <span className="font-black text-[10px] uppercase tracking-tight text-gray-800">勾选导出</span>
+                    <button onClick={() => setExportSubMode('select')} className="flex items-center gap-2 p-2 hover:bg-black/[0.03] rounded-[12px] transition-all">
+                      <CheckSquare size={14} className="opacity-40" />
+                      <span className="font-black text-[10px] text-gray-800">勾选预览</span>
                     </button>
                   </div>
                 ) : (
-                  <div className="p-1 flex flex-col gap-2.5 min-h-[200px]">
-                    <div className="flex items-center justify-between px-1 pt-1">
+                  <div className="p-1 flex flex-col gap-2 min-h-[180px]">
+                    <div className="flex items-center justify-between px-1">
                       <button onClick={() => setExportSubMode('main')} className="text-gray-300 hover:text-black"><ChevronLeft size={14} /></button>
-                      <span className="text-[9px] font-black opacity-30 tracking-[0.1em]">(已选 {selectedItemIds.length})</span>
-                      <button onClick={() => setSelectedItemIds(selectedItemIds.length === data.items.length ? [] : data.items.map(i => i.id))} className="text-[8px] font-black uppercase underline underline-offset-4 decoration-1 opacity-40">全选</button>
+                      <span className="text-[9px] font-black opacity-30">已选 {selectedItemIds.length}</span>
                     </div>
-                    <div className="grid grid-cols-3 gap-1 overflow-y-auto no-scrollbar max-h-28 py-1">
+                    <div className="grid grid-cols-3 gap-1 overflow-y-auto no-scrollbar max-h-24">
                       {data.items.map((item, i) => {
                         const isSelected = selectedItemIds.includes(item.id);
                         return (
-                          <button key={item.id} onClick={() => toggleItemSelection(item.id)} className={`h-7 rounded-[8px] font-mono font-black text-[8px] transition-all border ${isSelected ? 'bg-black border-black text-white' : 'bg-black/[0.02] border-transparent text-gray-300'}`}>
+                          <button key={item.id} onClick={() => toggleItemSelection(item.id)} className={`h-6 rounded-[6px] font-mono font-black text-[9px] transition-all border ${isSelected ? 'bg-black border-black text-white' : 'bg-black/[0.02] border-transparent text-gray-300'}`}>
                             {String(i + 1).padStart(2, '0')}
                           </button>
                         );
                       })}
                     </div>
-                    <button onClick={handleExportSelectedPreview} className="w-full bg-black text-white py-2.5 rounded-[12px] font-black text-[9px] tracking-[0.2em] uppercase flex items-center justify-center gap-1 active:scale-95 transition-transform mt-auto">
-                      生成预览 <ArrowRight size={10} />
+                    <button onClick={handleExportSelectedPreview} className="w-full bg-black text-white py-2 rounded-[10px] font-black text-[10px] flex items-center justify-center gap-1 mt-auto">
+                      生成发布 <ArrowRight size={10} />
                     </button>
                   </div>
                 )}
               </div>
             )}
             <button onClick={(e) => { e.stopPropagation(); setShowExportMenu(!showExportMenu); if(!showExportMenu) { setExportSubMode('main'); setSelectedItemIds([]); } setShowThemePicker(false); setShowConfig(false); setShowTagManager(false); }} disabled={isExporting} className={`flex flex-col items-center gap-0.5 transition-colors ${showExportMenu ? 'text-black' : 'text-black/40'}`}>
-              {isExporting ? <Loader2 size={20} className="animate-spin" /> : <Send size={20} />}
+              {isExporting ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
               <span className="text-[10px] font-bold">发布</span>
             </button>
           </div>
@@ -1083,15 +1072,14 @@ const App = () => {
       </div>
 
       {isExporting && (
-        <div className="fixed inset-0 z-[600] flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm">
-           <div className="bg-white p-8 rounded-[32px] flex flex-col items-center gap-6 shadow-2xl animate-in zoom-in duration-300">
-             <Loader2 size={40} className="animate-spin text-black" />
+        <div className="fixed inset-0 z-[600] flex flex-col items-center justify-center bg-black/30 backdrop-blur-sm">
+           <div className="bg-white p-6 rounded-[24px] flex flex-col items-center gap-4 shadow-2xl animate-in zoom-in duration-300">
+             <Loader2 size={32} className="animate-spin text-black" />
              <div className="text-center">
-               <p className="text-lg font-black mb-1">正在渲染...</p>
-               <div className="w-40 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+               <p className="text-[14px] font-black mb-1">正在渲染...</p>
+               <div className="w-32 h-1 bg-gray-100 rounded-full overflow-hidden">
                  <div className="h-full bg-black transition-all duration-300" style={{ width: `${exportProgress}%` }}></div>
                </div>
-               <p className="text-[10px] text-gray-400 mt-2">高清生成中，请不要关闭浏览器</p>
              </div>
            </div>
         </div>
@@ -1099,26 +1087,26 @@ const App = () => {
 
       {isPreviewing && previewUrls.length > 0 && (
         <div className="fixed inset-0 z-[600] flex flex-col" style={{ backgroundColor: currentTheme.bg }}>
-          <div className="h-16 flex items-center justify-between px-6 bg-white/40 backdrop-blur-2xl shrink-0 border-b border-black/5">
-            <button onClick={() => { previewUrls.forEach(URL.revokeObjectURL); setIsPreviewing(false); }} className="font-bold flex items-center gap-2" style={{ color: currentTheme.text }}><ChevronLeft size={20} /> 返回</button>
+          <div className="h-14 flex items-center justify-between px-6 bg-white/40 backdrop-blur-2xl shrink-0 border-b border-black/5">
+            <button onClick={() => { previewUrls.forEach(URL.revokeObjectURL); setIsPreviewing(false); }} className="font-bold flex items-center gap-2 text-[14px]" style={{ color: currentTheme.text }}><ChevronLeft size={18} /> 返回</button>
             <button 
               onClick={() => {
                 previewUrls.forEach((url, i) => {
                   const link = document.createElement('a');
-                  link.download = `年度记录_${data.year}_${i+1}.png`;
+                  link.download = `年度总结_${data.year}_${i+1}.png`;
                   link.href = url;
                   link.click();
                 });
               }} 
-              className="text-white px-5 py-2 rounded-full font-black text-[11px] shadow-lg active:scale-95 transition-transform" 
+              className="text-white px-4 py-1.5 rounded-full font-black text-[11px] shadow-lg" 
               style={{ backgroundColor: currentTheme.accent }}
             >
               保存图片
             </button>
           </div>
-          <div className="flex-1 overflow-y-auto no-scrollbar p-6 space-y-12 pb-32">
+          <div className="flex-1 overflow-y-auto no-scrollbar p-6 space-y-8 pb-32">
             {previewUrls.map((url, i) => (
-              <div key={i} className="w-full max-w-[1440px] mx-auto shadow-2xl rounded-[40px] overflow-hidden bg-white/20 border border-white/20">
+              <div key={i} className="w-full max-w-[1440px] mx-auto shadow-2xl rounded-[24px] overflow-hidden bg-white/20 border border-white/20">
                 <img src={url} alt={`PREVIEW ${i}`} className="w-full h-auto block" style={{ objectFit: 'contain' }} />
               </div>
             ))}
