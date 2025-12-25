@@ -196,9 +196,13 @@ const SummaryCanvas = ({
     <div className="w-full flex flex-col mb-[20px] relative z-10 shrink-0">
       <div className="flex justify-between items-end border-b-[4px] border-current pb-8 mb-[60px]" style={{ color: currentTheme.text }}>
         <div className="flex flex-col">
-          <span contentEditable={!isExport} suppressContentEditableWarning onBlur={(e) => updateDataField('summaryType', e.currentTarget.innerText.trim())} className={`font-serif text-[32px] tracking-[0.2em] font-black outline-none`}>
-            {data.summaryType}
-          </span>
+          <span 
+            contentEditable={!isExport} 
+            suppressContentEditableWarning 
+            onInput={(e) => updateDataField('summaryType', e.currentTarget.innerText.trim())} 
+            className={`font-serif text-[32px] tracking-[0.2em] font-black outline-none`}
+            dangerouslySetInnerHTML={{ __html: data.summaryType }}
+          />
         </div>
         <div className="text-right">
           <span className="font-mono text-[22px] tracking-[0.3em] font-bold block uppercase opacity-60">ISSUE NO. {data.year.slice(-2)}</span>
@@ -219,9 +223,14 @@ const SummaryCanvas = ({
               <div className="flex-1 relative">
                 <span className="absolute -top-[35px] left-2 text-[20px] font-mono font-bold tracking-[0.8em] uppercase opacity-40">Yearly Chronicle</span>
                 <div className="absolute -left-6 top-8 w-40 h-40 rounded-full -z-10 opacity-10" style={{ backgroundColor: currentTheme.accent }}></div>
-                <h1 contentEditable={!isExport} suppressContentEditableWarning onBlur={(e) => updateDataField('mainTitle', e.currentTarget.innerText.trim())} className={`text-[170px] font-serif font-black leading-[1.1] tracking-tighter outline-none relative`} style={{ backgroundImage: `linear-gradient(to right, ${currentTheme.text} 55%, ${currentTheme.accent} 55%)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', display: 'inline-block', minHeight: '1em' }}>
-                  {data.mainTitle}
-                </h1>
+                <h1 
+                  contentEditable={!isExport} 
+                  suppressContentEditableWarning 
+                  onInput={(e) => updateDataField('mainTitle', e.currentTarget.innerText.trim())} 
+                  className={`text-[170px] font-serif font-black leading-[1.1] tracking-tighter outline-none relative`} 
+                  style={{ backgroundImage: `linear-gradient(to right, ${currentTheme.text} 55%, ${currentTheme.accent} 55%)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', display: 'inline-block', minHeight: '1em' }}
+                  dangerouslySetInnerHTML={{ __html: data.mainTitle }}
+                />
                 <div className="flex items-center gap-4 mt-[-15px] mb-8">
                   <div className="h-[2px] w-20" style={{ backgroundColor: currentTheme.accent }}></div>
                   <span className="text-[18px] font-mono font-black tracking-[0.3em] uppercase" style={{ color: currentTheme.accent }}>Headline Design Archive</span>
@@ -232,9 +241,14 @@ const SummaryCanvas = ({
             <div className="flex items-start gap-12 mb-6">
               <div className="flex flex-col relative z-20 shrink-0">
                 <span className="text-[20px] font-bold tracking-[0.4em] mb-2 uppercase opacity-60">AUTHENTICATED BY</span>
-                <span contentEditable={!isExport} suppressContentEditableWarning onBlur={(e) => updateDataField('author', e.currentTarget.innerText.trim())} className={`text-[56px] font-serif font-black tracking-widest underline decoration-[8px] underline-offset-[16px] outline-none w-fit`} style={{ textDecorationColor: currentTheme.accent }}>
-                  {data.author}
-                </span>
+                <span 
+                  contentEditable={!isExport} 
+                  suppressContentEditableWarning 
+                  onInput={(e) => updateDataField('author', e.currentTarget.innerText.trim())} 
+                  className={`text-[56px] font-serif font-black tracking-widest underline decoration-[8px] underline-offset-[16px] outline-none w-fit`} 
+                  style={{ textDecorationColor: currentTheme.accent }}
+                  dangerouslySetInnerHTML={{ __html: data.author }}
+                />
               </div>
               <div className="flex-1 flex-col gap-8 mt-2 relative hidden"> {/* Reserved for layout consistency if needed */} </div>
               <div className="flex-1 flex flex-col gap-8 mt-2 relative">
@@ -271,7 +285,7 @@ const SummaryCanvas = ({
                       <div 
                         contentEditable={!isExport} 
                         suppressContentEditableWarning 
-                        onBlur={(e) => { updateDataField('intro', e.currentTarget.innerHTML); }} 
+                        onInput={(e) => { updateDataField('intro', e.currentTarget.innerHTML); }} 
                         className={`text-[42px] mt-2 leading-[1.6] font-serif font-medium outline-none relative z-10 tracking-tight`}
                         dangerouslySetInnerHTML={{ __html: data.intro }}
                       />
@@ -298,7 +312,13 @@ const SummaryCanvas = ({
           <div key={item.id} className={`group relative flex gap-[110px] items-start transition-all duration-500 p-[40px] -mx-[40px] rounded-[70px]`}>
             <div className="flex flex-col items-end pt-[22px] min-w-[260px] relative">
               <span className="text-[120px] font-serif italic leading-none mb-[32px] font-black opacity-10" style={{ color: currentTheme.accent }}>{String(data.items.findIndex(i => i.id === item.id) + 1).padStart(2, '0')}</span>
-              <span contentEditable={!isExport} suppressContentEditableWarning onBlur={(e) => updateItemField(item.id, 'date', e.currentTarget.innerText.trim())} className={`text-[34px] font-mono font-black tracking-widest outline-none`}>{item.date}</span>
+              <span 
+                contentEditable={!isExport} 
+                suppressContentEditableWarning 
+                onInput={(e) => updateItemField(item.id, 'date', e.currentTarget.innerText.trim())} 
+                className={`text-[34px] font-mono font-black tracking-widest outline-none`}
+                dangerouslySetInnerHTML={{ __html: item.date }}
+              />
               
               <div className="relative mt-4">
                 <div 
@@ -327,7 +347,13 @@ const SummaryCanvas = ({
 
             <div className="flex-1 flex flex-col">
               <div className="flex justify-between items-start mb-[30px]">
-                <h2 contentEditable={!isExport} suppressContentEditableWarning onBlur={(e) => updateItemField(item.id, 'title', e.currentTarget.innerText.trim())} className={`text-[76px] font-serif font-black leading-tight tracking-tight outline-none w-full min-h-[1em]`}>{item.title}</h2>
+                <h2 
+                  contentEditable={!isExport} 
+                  suppressContentEditableWarning 
+                  onInput={(e) => updateItemField(item.id, 'title', e.currentTarget.innerText.trim())} 
+                  className={`text-[76px] font-serif font-black leading-tight tracking-tight outline-none w-full min-h-[1em]`}
+                  dangerouslySetInnerHTML={{ __html: item.title }}
+                />
                 {!isExport && (
                   <div className="flex gap-4 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                     <button onClick={(e) => { e.stopPropagation(); removeItem(item.id, e); }} className="p-5 bg-white shadow-xl text-red-500 rounded-full active:scale-90 transition-transform"><Trash2 size={36} /></button>
@@ -366,13 +392,8 @@ const SummaryCanvas = ({
                   <React.Fragment key={idx}>
                     {item.contents.length > 1 && (
                       <div className={`${idx === 0 ? 'mt-14 mb-4' : 'mt-20 mb-10'} relative flex items-center justify-start pr-20 group/divider`}>
-                        {/* 左侧加粗竖向装饰色块 */}
                         <div className="w-1.5 h-32 shrink-0 rounded-full" style={{ backgroundColor: currentTheme.accent }}></div>
-                        
-                        {/* 主引导线 */}
                         <div className="h-[1px] flex-1 ml-10" style={{ backgroundColor: `${currentTheme.text}20` }}></div>
-                        
-                        {/* 核心排版标签区域 */}
                         <div className="absolute left-6 -top-14 flex flex-col gap-2">
                           <div className="flex items-center gap-4">
                             <span className="text-[14px] font-mono font-black tracking-[0.8em] uppercase opacity-25 select-none">Record Part</span>
@@ -380,22 +401,18 @@ const SummaryCanvas = ({
                           </div>
                           <div className="flex items-baseline gap-4">
                             <span className="text-[42px] font-serif font-black italic tracking-tighter" style={{ color: currentTheme.accent }}>PART.</span>
-                            <span className="text-[72px] font-mono font-black leading-none tracking-tight opacity-10">{String(idx + 1).padStart(2, '0')}</span>
+                            <span className="text-[72px] font-mono font-black leading-none tracking-tight opacity-10">{String(data.items.findIndex(i => i.id === item.id) + 1).padStart(2, '0')}</span>
                             <div className="flex flex-col gap-1 ml-4 opacity-40">
                               <span className="text-[12px] font-mono font-bold tracking-widest uppercase">Section Log</span>
                               <div className="w-12 h-1 rounded-full" style={{ backgroundColor: currentTheme.accent }}></div>
                             </div>
                           </div>
                         </div>
-
-                        {/* 右侧微型几何装饰 */}
                         <div className="ml-12 flex items-center gap-3">
                            <div className="w-3 h-3 border-2 border-current rotate-45 opacity-20"></div>
                            <div className="w-3 h-3 rounded-full bg-current opacity-10"></div>
                            <div className="w-3 h-3 rounded-full bg-current opacity-5"></div>
                         </div>
-
-                        {/* 装饰性排版水印 */}
                         <div className="absolute right-0 -bottom-10 opacity-[0.03] select-none pointer-events-none">
                           <span className="text-[120px] font-mono font-black uppercase tracking-tighter">DATA ARCHIVE</span>
                         </div>
@@ -405,11 +422,11 @@ const SummaryCanvas = ({
                       <div 
                         contentEditable={!isExport} 
                         suppressContentEditableWarning 
-                        onBlur={(e) => {
+                        onInput={(e) => {
                           updateContentBlock(item.id, idx, e.currentTarget.innerHTML);
                         }}
                         onPaste={(e) => handlePaste(item.id, idx, 'contents', e)}
-                        className={`text-[44px] leading-[1.85] font-serif text-justify whitespace-pre-wrap break-words break-all outline-none w-full min-h-[1em]`}
+                        className={`text-[44px] leading-[1.85] font-serif whitespace-pre-wrap break-words break-all outline-none w-full min-h-[1em]`}
                         dangerouslySetInnerHTML={{ __html: c }}
                       />
                       {!isExport && item.contents.length > 1 && (
@@ -447,11 +464,11 @@ const SummaryCanvas = ({
                   <div 
                     contentEditable={!isExport} 
                     suppressContentEditableWarning 
-                    onBlur={(e) => {
+                    onInput={(e) => {
                       updateItemField(item.id, 'thoughts', e.currentTarget.innerHTML);
                     }}
                     onPaste={(e) => handlePaste(item.id, null, 'thoughts', e)}
-                    className="text-[40px] Bird leading-[1.8] font-serif font-light italic break-words break-all outline-none w-full whitespace-pre-wrap opacity-90 min-h-[1em]"
+                    className="text-[40px] leading-[1.8] font-serif font-light italic break-words break-all outline-none w-full whitespace-pre-wrap opacity-90 min-h-[1em]"
                     dangerouslySetInnerHTML={{ __html: item.thoughts }}
                   />
                 </div>
@@ -488,7 +505,6 @@ const App = () => {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        // 数据结构迁移支持旧版 content 字段
         parsed.items = parsed.items.map((item: any) => ({
           ...item,
           contents: item.contents || [item.content || DEFAULT_TEXT]
@@ -561,14 +577,18 @@ const App = () => {
 
   useEffect(() => {
     const handleSelectionChange = () => {
-      if (document.queryCommandState('justifyCenter')) setCurrentAlignment('center');
-      else if (document.queryCommandState('justifyRight')) setCurrentAlignment('right');
-      else if (document.queryCommandState('justifyFull')) setCurrentAlignment('justify');
-      else setCurrentAlignment('left');
+      let newAlign = 'left';
+      if (document.queryCommandState('justifyCenter')) newAlign = 'center';
+      else if (document.queryCommandState('justifyRight')) newAlign = 'right';
+      else if (document.queryCommandState('justifyFull')) newAlign = 'justify';
+      
+      if (newAlign !== currentAlignment) {
+        setCurrentAlignment(newAlign);
+      }
     };
     document.addEventListener('selectionchange', handleSelectionChange);
     return () => document.removeEventListener('selectionchange', handleSelectionChange);
-  }, []);
+  }, [currentAlignment]);
 
   useEffect(() => {
     const updateScale = () => {
@@ -623,7 +643,10 @@ const App = () => {
   };
 
   const updateDataField = (field: keyof Omit<SummaryData, 'items' | 'savedCategories' | 'savedTypes'>, value: string) => {
-    setData(prev => ({ ...prev, [field]: value }));
+    setData(prev => {
+      if (prev[field] === value) return prev;
+      return { ...prev, [field]: value };
+    });
   };
 
   const updateItemField = (id: string, field: keyof SummaryItem, value: any) => {
@@ -701,9 +724,16 @@ const App = () => {
   };
 
   const applyStyle = (command: string, value: string | null = null) => {
+    document.execCommand(command, false, value || undefined);
+    
+    const active = document.activeElement as HTMLElement;
+    if (active && active.hasAttribute('contenteditable')) {
+      const event = new Event('input', { bubbles: true });
+      active.dispatchEvent(event);
+    }
+    
     if (command === 'fontSize' && value) {
       document.execCommand('styleWithCSS', false, 'true');
-      document.execCommand('fontSize', false, '7');
       const selection = window.getSelection();
       if (selection && selection.rangeCount > 0) {
         const container = selection.anchorNode?.parentElement;
@@ -717,8 +747,6 @@ const App = () => {
           });
         }
       }
-    } else {
-      document.execCommand(command, false, value || undefined);
     }
   };
 
@@ -950,7 +978,7 @@ const App = () => {
                 <div className="w-[1px] h-6 bg-black/5 mx-1 shrink-0"></div>
                 <button onMouseDown={(e) => { e.preventDefault(); setShowColorPicker(!showColorPicker); setShowFontSizeSlider(false); }} className={`p-2.5 rounded-2xl transition-colors shrink-0 ${showColorPicker ? 'bg-black/10' : 'hover:bg-black/5'}`}><Palette size={20} style={{ color: currentTheme.accent }} /></button>
                 <div className="flex-1"></div>
-                <button onClick={(e) => { e.stopPropagation(); setToolbarMode('batch'); }} className="p-2.5 bg-black/5 rounded-2xl flex items-center gap-2 shrink-0"><Search size={18} /><span className="text-[10px] font-bold uppercase">批量</span></button>
+                <button onClick={(e) => { e.stopPropagation(); setToolbarMode('batch'); }} className="p-2.5 bg-black/5 rounded-2xl flex items-center gap-2 shrink-0"><Search size={18} /><span className="text-[10px] font-bold">批量</span></button>
               </div>
             ) : (
               <div className="flex items-center gap-2 w-full flex-nowrap animate-in fade-in duration-300">
@@ -1035,7 +1063,7 @@ const App = () => {
                   <div className="space-y-4 min-h-[220px] flex flex-col">
                     <div className="flex items-center justify-between"><div className="flex items-center gap-2"><button onClick={() => setExportSubMode('main')} className="text-gray-400"><ChevronLeft size={20} /></button><h3 className="text-[15px] font-serif font-black text-gray-800">勾选模块 ({selectedItemIds.length})</h3></div><button onClick={() => setShowExportMenu(false)} className="text-gray-300 hover:text-black"><X size={16} /></button></div>
                     <div className="grid grid-cols-5 gap-2 overflow-y-auto no-scrollbar max-h-40 p-1">
-                      {data.items.map((item, i) => (<button key={item.id} onClick={() => toggleItemSelection(item.id)} className={`h-10 rounded-[12px] font-mono font-black text-[12px] transition-all border ${selectedItemIds.includes(item.id) ? 'bg-black border-black text-white' : 'bg-black/[0.02] border-black/5 text-gray-300'}`}>{String(i + 1).padStart(2, '0')}</button>))}
+                      {data.items.map((item, i) => (<button key={item.id} onClick={() => toggleItemSelection(item.id)} className={`h-10 rounded-[12px] font-mono font-black text-[12px] transition-all border ${selectedItemIds.includes(item.id) ? 'bg-black border-black text-white' : 'bg-black/[0.02] border-black/5 text-gray-300'}`}>{String(data.items.findIndex(it => it.id === item.id) + 1).padStart(2, '0')}</button>))}
                     </div>
                     <button onClick={handleExportSelectedPreview} className="w-full bg-black text-white py-4 rounded-[18px] font-black text-[14px] flex items-center justify-center gap-2 mt-auto shadow-xl">生成发布 <ArrowRight size={16} /></button>
                   </div>
