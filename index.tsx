@@ -79,6 +79,7 @@ const TEXTURE_URL = `url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAy
 
 const DEFAULT_TEXT = '';
 const GET_CURRENT_DATE = () => new Date().getFullYear().toString();
+const STORAGE_KEY = 'year_end_summary_app_v1';
 
 const InlinePicker = ({ 
   id, 
@@ -410,28 +411,45 @@ const SummaryCanvas = ({
 );
 
 const App = () => {
-  const [data, setData] = useState<SummaryData>({
-    mainTitle: '衔书又止',
-    author: '琉璃',
-    year: new Date().getFullYear().toString(),
-    wordCount: '0',
-    intro: '人类总喜欢给万物下定义，好像不说清楚我是谁、你是什么，第二天太阳就不会升起来一样',
-    summaryType: '彩云易散琉璃脆',
-    themeId: 'rose',
-    savedCategories: ['文稿'],
-    savedTypes: ['游戏掉落鉴', '段子体', '人生四格', '常稿', '短打', '猫塑', '黄油鉴'],
-    items: [
-      {
-        id: 'init-1',
-        title: '',
-        date: GET_CURRENT_DATE(),
-        category: '文稿',
-        type: '无',
-        content: DEFAULT_TEXT,
-        thoughts: DEFAULT_TEXT
+  const [data, setData] = useState<SummaryData>(() => {
+    // 尝试从本地存储初始化数据
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error("Failed to parse saved data:", e);
       }
-    ]
+    }
+    // 默认初始数据
+    return {
+      mainTitle: '衔书又止',
+      author: '琉璃',
+      year: new Date().getFullYear().toString(),
+      wordCount: '0',
+      intro: '人类总喜欢给万物下定义，好像不说清楚我是谁、你是什么，第二天太阳就不会升起来一样',
+      summaryType: '彩云易散琉璃脆',
+      themeId: 'rose',
+      savedCategories: ['文稿'],
+      savedTypes: ['游戏掉落鉴', '段子体', '人生四格', '常稿', '短打', '猫塑', '黄油鉴'],
+      items: [
+        {
+          id: 'init-1',
+          title: '',
+          date: GET_CURRENT_DATE(),
+          category: '文稿',
+          type: '无',
+          content: DEFAULT_TEXT,
+          thoughts: DEFAULT_TEXT
+        }
+      ]
+    };
   });
+
+  // 监听数据变化并自动保存到 localStorage
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  }, [data]);
 
   const [showConfig, setShowConfig] = useState(false);
   const [showTagManager, setShowTagManager] = useState(false);
