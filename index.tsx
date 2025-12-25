@@ -83,6 +83,36 @@ const DEFAULT_TEXT = '';
 const GET_CURRENT_DATE = () => new Date().getFullYear().toString();
 const STORAGE_KEY = 'year_end_summary_app_v2';
 
+// 新增：解决光标问题的组件
+const EditableArea = ({ html, onChange, className, tag: Tag = 'div', isExport = false, onPaste, ...props }: any) => {
+  const elRef = useRef<HTMLElement>(null);
+  const isInitialMount = useRef(true);
+
+  useEffect(() => {
+    // 仅在初始挂载或当前元素没有焦点时更新 innerHTML，防止 React 重新协调导致的丢焦点
+    if (elRef.current && (isInitialMount.current || document.activeElement !== elRef.current)) {
+      elRef.current.innerHTML = html || '';
+      isInitialMount.current = false;
+    }
+  }, [html]);
+
+  if (isExport) {
+    return <Tag className={className} dangerouslySetInnerHTML={{ __html: html }} {...props} />;
+  }
+
+  return (
+    <Tag
+      ref={elRef as any}
+      contentEditable={true}
+      suppressContentEditableWarning
+      className={`${className} outline-none`}
+      onInput={(e: React.FormEvent<HTMLElement>) => onChange(e.currentTarget.innerHTML)}
+      onPaste={onPaste}
+      {...props}
+    />
+  );
+};
+
 const InlinePicker = ({ 
   id, 
   type, 
@@ -196,12 +226,12 @@ const SummaryCanvas = ({
     <div className="w-full flex flex-col mb-[20px] relative z-10 shrink-0">
       <div className="flex justify-between items-end border-b-[4px] border-current pb-8 mb-[60px]" style={{ color: currentTheme.text }}>
         <div className="flex flex-col">
-          <span 
-            contentEditable={!isExport} 
-            suppressContentEditableWarning 
-            onInput={(e) => updateDataField('summaryType', e.currentTarget.innerText.trim())} 
-            className={`font-serif text-[32px] tracking-[0.2em] font-black outline-none`}
-            dangerouslySetInnerHTML={{ __html: data.summaryType }}
+          <EditableArea 
+            tag="span"
+            isExport={isExport} 
+            html={data.summaryType}
+            onChange={(val: string) => updateDataField('summaryType', val)}
+            className="font-serif text-[32px] tracking-[0.2em] font-black min-w-[200px]"
           />
         </div>
         <div className="text-right">
@@ -212,7 +242,7 @@ const SummaryCanvas = ({
 
       <div className="grid grid-cols-12 gap-[40px] items-start">
         <div className="col-span-1 flex flex-col items-center pt-8">
-           <div className="rotate-180 [writing-mode:vertical-lr] font-serif text-[130px] font-black leading-none tracking-widest select-none outline-none opacity-20">{data.year}</div>
+           <div className="rotate-180 [writing-mode:vertical-lr] font-serif text-[130px] font-black leading-none tracking-widest select-none opacity-20">{data.year}</div>
            <div className="w-[4px] h-[300px] mt-8 opacity-20" style={{ backgroundColor: currentTheme.accent }}></div>
         </div>
 
@@ -223,13 +253,13 @@ const SummaryCanvas = ({
               <div className="flex-1 relative">
                 <span className="absolute -top-[35px] left-2 text-[20px] font-mono font-bold tracking-[0.8em] uppercase opacity-40">Yearly Chronicle</span>
                 <div className="absolute -left-6 top-8 w-40 h-40 rounded-full -z-10 opacity-10" style={{ backgroundColor: currentTheme.accent }}></div>
-                <h1 
-                  contentEditable={!isExport} 
-                  suppressContentEditableWarning 
-                  onInput={(e) => updateDataField('mainTitle', e.currentTarget.innerText.trim())} 
-                  className={`text-[170px] font-serif font-black leading-[1.1] tracking-tighter outline-none relative`} 
-                  style={{ backgroundImage: `linear-gradient(to right, ${currentTheme.text} 55%, ${currentTheme.accent} 55%)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', display: 'inline-block', minHeight: '1em' }}
-                  dangerouslySetInnerHTML={{ __html: data.mainTitle }}
+                <EditableArea 
+                  tag="h1"
+                  isExport={isExport}
+                  html={data.mainTitle}
+                  onChange={(val: string) => updateDataField('mainTitle', val)}
+                  className="text-[170px] font-serif font-black leading-[1.1] tracking-tighter relative min-h-[1em] inline-block"
+                  style={{ backgroundImage: `linear-gradient(to right, ${currentTheme.text} 55%, ${currentTheme.accent} 55%)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}
                 />
                 <div className="flex items-center gap-4 mt-[-15px] mb-8">
                   <div className="h-[2px] w-20" style={{ backgroundColor: currentTheme.accent }}></div>
@@ -241,13 +271,13 @@ const SummaryCanvas = ({
             <div className="flex items-start gap-12 mb-6">
               <div className="flex flex-col relative z-20 shrink-0">
                 <span className="text-[20px] font-bold tracking-[0.4em] mb-2 uppercase opacity-60">AUTHENTICATED BY</span>
-                <span 
-                  contentEditable={!isExport} 
-                  suppressContentEditableWarning 
-                  onInput={(e) => updateDataField('author', e.currentTarget.innerText.trim())} 
-                  className={`text-[56px] font-serif font-black tracking-widest underline decoration-[8px] underline-offset-[16px] outline-none w-fit`} 
+                <EditableArea 
+                  tag="span"
+                  isExport={isExport}
+                  html={data.author}
+                  onChange={(val: string) => updateDataField('author', val)}
+                  className="text-[56px] font-serif font-black tracking-widest underline decoration-[8px] underline-offset-[16px] w-fit min-w-[100px]"
                   style={{ textDecorationColor: currentTheme.accent }}
-                  dangerouslySetInnerHTML={{ __html: data.author }}
                 />
               </div>
               <div className="flex-1 flex-col gap-8 mt-2 relative hidden"> {/* Reserved for layout consistency if needed */} </div>
@@ -282,12 +312,11 @@ const SummaryCanvas = ({
                       <div className="absolute -right-[30px] -bottom-[30px] pointer-events-none z-0 rotate-[12deg]">
                          <Hash size={300} strokeWidth={0.3} className="opacity-5" style={{ color: currentTheme.accent }} />
                       </div>
-                      <div 
-                        contentEditable={!isExport} 
-                        suppressContentEditableWarning 
-                        onInput={(e) => { updateDataField('intro', e.currentTarget.innerHTML); }} 
-                        className={`text-[42px] mt-2 leading-[1.6] font-serif font-medium outline-none relative z-10 tracking-tight`}
-                        dangerouslySetInnerHTML={{ __html: data.intro }}
+                      <EditableArea 
+                        isExport={isExport}
+                        html={data.intro}
+                        onChange={(val: string) => updateDataField('intro', val)}
+                        className="text-[42px] mt-2 leading-[1.6] font-serif font-medium relative z-10 tracking-tight min-h-[2em]"
                       />
                     </div>
                   </div>
@@ -312,12 +341,12 @@ const SummaryCanvas = ({
           <div key={item.id} className={`group relative flex gap-[110px] items-start transition-all duration-500 p-[40px] -mx-[40px] rounded-[70px]`}>
             <div className="flex flex-col items-end pt-[22px] min-w-[260px] relative">
               <span className="text-[120px] font-serif italic leading-none mb-[32px] font-black opacity-10" style={{ color: currentTheme.accent }}>{String(data.items.findIndex(i => i.id === item.id) + 1).padStart(2, '0')}</span>
-              <span 
-                contentEditable={!isExport} 
-                suppressContentEditableWarning 
-                onInput={(e) => updateItemField(item.id, 'date', e.currentTarget.innerText.trim())} 
-                className={`text-[34px] font-mono font-black tracking-widest outline-none`}
-                dangerouslySetInnerHTML={{ __html: item.date }}
+              <EditableArea 
+                tag="span"
+                isExport={isExport}
+                html={item.date}
+                onChange={(val: string) => updateItemField(item.id, 'date', val)}
+                className="text-[34px] font-mono font-black tracking-widest min-w-[100px] text-right"
               />
               
               <div className="relative mt-4">
@@ -347,12 +376,12 @@ const SummaryCanvas = ({
 
             <div className="flex-1 flex flex-col">
               <div className="flex justify-between items-start mb-[30px]">
-                <h2 
-                  contentEditable={!isExport} 
-                  suppressContentEditableWarning 
-                  onInput={(e) => updateItemField(item.id, 'title', e.currentTarget.innerText.trim())} 
-                  className={`text-[76px] font-serif font-black leading-tight tracking-tight outline-none w-full min-h-[1em]`}
-                  dangerouslySetInnerHTML={{ __html: item.title }}
+                <EditableArea 
+                  tag="h2"
+                  isExport={isExport}
+                  html={item.title}
+                  onChange={(val: string) => updateItemField(item.id, 'title', val)}
+                  className="text-[76px] font-serif font-black leading-tight tracking-tight w-full min-h-[1em]"
                 />
                 {!isExport && (
                   <div className="flex gap-4 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
@@ -366,7 +395,7 @@ const SummaryCanvas = ({
                 <div className="relative">
                   <span 
                     onClick={(e) => { e.stopPropagation(); if (!isExport) { setActivePicker(isTypeOpen ? null : {id: item.id, type: 'type'}); } }}
-                    className={`text-[34px] italic font-black uppercase opacity-60 outline-none flex items-center gap-4 cursor-pointer px-4 py-2 rounded-xl transition-all hover:bg-black/5`}
+                    className={`text-[34px] italic font-black uppercase opacity-60 flex items-center gap-4 cursor-pointer px-4 py-2 rounded-xl transition-all hover:bg-black/5`}
                   >
                     {item.type} 
                     {!isExport && <ChevronDown size={20} className={`opacity-30 transition-transform ${isTypeOpen ? 'rotate-180' : 'rotate-0'}`} />}
@@ -390,7 +419,6 @@ const SummaryCanvas = ({
               <div className="flex flex-col mb-8 relative">
                 {item.contents.map((c, idx) => (
                   <React.Fragment key={idx}>
-                    {/* 分隔符与正文区块编号 */}
                     <div className={`${idx === 0 ? 'mt-14 mb-4' : 'mt-20 mb-10'} relative flex items-center justify-start pr-20 group/divider`}>
                       <div className="w-1.5 h-32 shrink-0 rounded-full" style={{ backgroundColor: currentTheme.accent }}></div>
                       <div className="h-[1px] flex-1 ml-10" style={{ backgroundColor: `${currentTheme.text}20` }}></div>
@@ -401,7 +429,6 @@ const SummaryCanvas = ({
                         </div>
                         <div className="flex items-baseline gap-4">
                           <span className="text-[42px] font-serif font-black italic tracking-tighter" style={{ color: currentTheme.accent }}>PART.</span>
-                          {/* 这里是同一个时间轴内的正文区域编号：01, 02, 03... */}
                           <span className="text-[72px] font-mono font-black leading-none tracking-tight opacity-10">{String(idx + 1).padStart(2, '0')}</span>
                           <div className="flex flex-col gap-1 ml-4 opacity-40">
                             <span className="text-[12px] font-mono font-bold tracking-widest uppercase">Section Log</span>
@@ -420,15 +447,12 @@ const SummaryCanvas = ({
                     </div>
                     
                     <div className="relative group/block">
-                      <div 
-                        contentEditable={!isExport} 
-                        suppressContentEditableWarning 
-                        onInput={(e) => {
-                          updateContentBlock(item.id, idx, e.currentTarget.innerHTML);
-                        }}
-                        onPaste={(e) => handlePaste(item.id, idx, 'contents', e)}
-                        className={`text-[44px] leading-[1.85] font-serif whitespace-pre-wrap break-words break-all outline-none w-full min-h-[1em]`}
-                        dangerouslySetInnerHTML={{ __html: c }}
+                      <EditableArea 
+                        isExport={isExport}
+                        html={c}
+                        onChange={(val: string) => updateContentBlock(item.id, idx, val)}
+                        onPaste={(e: any) => handlePaste(item.id, idx, 'contents', e)}
+                        className="text-[44px] leading-[1.85] font-serif whitespace-pre-wrap break-words break-all w-full min-h-[1.5em]"
                       />
                       {!isExport && item.contents.length > 1 && (
                         <button 
@@ -462,15 +486,12 @@ const SummaryCanvas = ({
                 </div>
                 <div className="flex-1">
                   <h3 className="text-[28px] font-serif font-black mb-6 tracking-widest uppercase opacity-80" style={{ color: currentTheme.accent }}>{data.author}有话说 / {data.author.toUpperCase()}'S MESSAGE</h3>
-                  <div 
-                    contentEditable={!isExport} 
-                    suppressContentEditableWarning 
-                    onInput={(e) => {
-                      updateItemField(item.id, 'thoughts', e.currentTarget.innerHTML);
-                    }}
-                    onPaste={(e) => handlePaste(item.id, null, 'thoughts', e)}
-                    className="text-[40px] leading-[1.8] font-serif font-light italic break-words break-all outline-none w-full whitespace-pre-wrap opacity-90 min-h-[1em]"
-                    dangerouslySetInnerHTML={{ __html: item.thoughts }}
+                  <EditableArea 
+                    isExport={isExport}
+                    html={item.thoughts}
+                    onChange={(val: string) => updateItemField(item.id, 'thoughts', val)}
+                    onPaste={(e: any) => handlePaste(item.id, null, 'thoughts', e)}
+                    className="text-[40px] leading-[1.8] font-serif font-light italic break-words break-all w-full whitespace-pre-wrap opacity-90 min-h-[2em]"
                   />
                 </div>
               </div>
