@@ -80,6 +80,337 @@ const TEXTURE_URL = `url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAy
 const DEFAULT_TEXT = '';
 const GET_CURRENT_DATE = () => new Date().toISOString().split('T')[0].replace(/-/g, '.');
 
+const InlinePicker = ({ 
+  id, 
+  type, 
+  currentVal, 
+  savedCategories, 
+  savedTypes, 
+  currentTheme, 
+  updateItemField, 
+  setActivePicker, 
+  setShowTagManager 
+}: { 
+  id: string, 
+  type: 'category' | 'type', 
+  currentVal: string,
+  savedCategories: string[],
+  savedTypes: string[],
+  currentTheme: ThemeConfig,
+  updateItemField: (id: string, field: keyof SummaryItem, value: string) => void,
+  setActivePicker: (val: {id: string, type: 'category' | 'type'} | null) => void,
+  setShowTagManager: (val: boolean) => void
+}) => {
+  const list = type === 'category' ? savedCategories : savedTypes;
+  return (
+    <div className="absolute top-[calc(100%+20px)] left-0 z-[100] w-[320px] bg-white/90 backdrop-blur-3xl rounded-[36px] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.18)] border border-white/60 p-2.5 animate-in fade-in zoom-in slide-in-from-top-3 duration-500 origin-top-left" onClick={e => e.stopPropagation()}>
+      <div className="px-5 pt-3 pb-2.5 border-b border-black/[0.04] mb-2.5 flex justify-between items-center">
+        <span className="text-[10px] font-mono font-black tracking-[0.4em] uppercase opacity-30">{type === 'category' ? 'Category Index' : 'Art Form'}</span>
+        <div className="flex gap-1">
+          <div className="w-1 h-1 rounded-full opacity-20" style={{ backgroundColor: currentTheme.accent }}></div>
+          <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: currentTheme.accent }}></div>
+        </div>
+      </div>
+      <div className="max-h-[420px] overflow-y-auto no-scrollbar py-1 space-y-1">
+        {list.length > 0 ? list.map((val, i) => (
+          <button 
+            key={i} 
+            onClick={() => {
+              updateItemField(id, type, val);
+              setActivePicker(null);
+            }}
+            className={`w-full group relative flex items-center px-5 py-3.5 rounded-[24px] transition-all duration-500 ${val === currentVal ? 'bg-black/[0.05]' : 'hover:bg-black/[0.02] hover:translate-x-1.5 active:scale-[0.97]'}`}
+          >
+            <span className="text-[11px] font-mono font-bold opacity-10 mr-4 group-hover:opacity-30 transition-opacity w-5">{String(i + 1).padStart(2, '0')}</span>
+            <span className={`text-[30px] font-black leading-none tracking-tight truncate transition-all duration-300 ${type === 'type' ? 'italic font-serif' : ''}`} style={{ color: val === currentVal ? currentTheme.accent : 'inherit' }}>{val}</span>
+            {val === currentVal && (
+              <div className="ml-auto w-2 h-2 rounded-full shadow-[0_0_8px] transition-all" style={{ backgroundColor: currentTheme.accent, boxShadow: `0 0 8px ${currentTheme.accent}44` }}></div>
+            )}
+          </button>
+        )) : (
+          <div className="py-10 px-4 text-center flex flex-col items-center gap-4 animate-in fade-in duration-700">
+            <div className="w-12 h-12 rounded-full bg-black/5 flex items-center justify-center">
+              <PlusCircle size={24} className="text-black/10" />
+            </div>
+            <p className="text-[24px] font-black text-black/20 leading-none tracking-tighter italic">Library Empty</p>
+            <button onClick={() => { setActivePicker(null); setShowTagManager(true); }} className="text-[14px] font-black uppercase tracking-[0.2em] text-black/40 hover:text-black transition-colors border-b border-black/10 pb-0.5">Initialize</button>
+          </div>
+        )}
+      </div>
+      <div className="mt-2.5 p-2 bg-black/[0.015] rounded-[24px] flex justify-center border-t border-black/[0.01]">
+         <Hash size={12} className="opacity-10" />
+      </div>
+    </div>
+  );
+};
+
+const SummaryCanvas = ({ 
+  data, 
+  currentTheme, 
+  itemsToRender, 
+  isExport = false, 
+  canvasRef, 
+  exportContainerRef,
+  updateDataField,
+  updateItemField,
+  removeItem,
+  activePicker,
+  setActivePicker,
+  handlePaste,
+  setShowTagManager
+}: { 
+  data: SummaryData, 
+  currentTheme: ThemeConfig, 
+  itemsToRender: SummaryItem[], 
+  isExport?: boolean,
+  canvasRef?: React.RefObject<HTMLDivElement | null>,
+  exportContainerRef?: React.RefObject<HTMLDivElement | null>,
+  updateDataField: (field: keyof Omit<SummaryData, 'items' | 'savedCategories' | 'savedTypes'>, value: string) => void,
+  updateItemField: (id: string, field: keyof SummaryItem, value: string) => void,
+  removeItem: (id: string, e: React.MouseEvent) => void,
+  activePicker: {id: string, type: 'category' | 'type'} | null,
+  setActivePicker: (val: {id: string, type: 'category' | 'type'} | null) => void,
+  handlePaste: (id: string, field: keyof SummaryItem, e: React.ClipboardEvent) => void,
+  setShowTagManager: (val: boolean) => void
+}) => (
+  <div 
+    ref={isExport ? exportContainerRef : canvasRef}
+    style={{ 
+      width: '1440px',
+      backgroundColor: currentTheme.bg,
+      minHeight: isExport ? 'auto' : '2560px',
+      paddingBottom: '30px',
+      transition: 'none'
+    }}
+    className={`text-[${currentTheme.text}] pt-[20px] px-[100px] flex flex-col relative overflow-hidden`}
+  >
+    <div className="absolute inset-0 opacity-[0.2] pointer-events-none" style={{ backgroundImage: TEXTURE_URL, backgroundSize: '64px 64px' }}></div>
+    
+    <div className="w-full flex flex-col mb-[20px] relative z-10 shrink-0">
+      <div className="flex justify-between items-end border-b-[4px] border-current pb-8 mb-[60px]" style={{ color: currentTheme.text }}>
+        <div className="flex flex-col">
+          <span contentEditable={!isExport} suppressContentEditableWarning onBlur={(e) => updateDataField('summaryType', e.currentTarget.innerText.trim())} className={`font-serif text-[32px] tracking-[0.2em] font-black outline-none`}>
+            {data.summaryType}
+          </span>
+        </div>
+        <div className="text-right">
+          <span className="font-mono text-[22px] tracking-[0.3em] font-bold block uppercase opacity-60">ISSUE NO. {data.year.slice(-2)}</span>
+          <span className="font-mono text-[22px] tracking-[0.3em] font-bold uppercase whitespace-nowrap opacity-60">ARCHIVE INDEX 001</span>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-12 gap-[40px] items-start">
+        <div className="col-span-1 flex flex-col items-center pt-8">
+           <div className="rotate-180 [writing-mode:vertical-lr] font-serif text-[130px] font-black leading-none tracking-widest select-none outline-none opacity-20">{data.year}</div>
+           <div className="w-[4px] h-[300px] mt-8 opacity-20" style={{ backgroundColor: currentTheme.accent }}></div>
+        </div>
+
+        <div className="col-span-11 pl-10 relative">
+          <div className="absolute -left-[40px] top-[40px] w-[80px] h-[8px]" style={{ backgroundColor: currentTheme.accent }}></div>
+          <div className="relative mb-4">
+            <div className="flex items-end mb-4">
+              <div className="flex-1 relative">
+                <span className="absolute -top-[35px] left-2 text-[20px] font-mono font-bold tracking-[0.8em] uppercase opacity-40">Yearly Chronicle</span>
+                <div className="absolute -left-6 top-8 w-40 h-40 rounded-full -z-10 opacity-10" style={{ backgroundColor: currentTheme.accent }}></div>
+                <h1 contentEditable={!isExport} suppressContentEditableWarning onBlur={(e) => updateDataField('mainTitle', e.currentTarget.innerText.trim())} className={`text-[170px] font-serif font-black leading-[1.1] tracking-tighter outline-none relative`} style={{ backgroundImage: `linear-gradient(to right, ${currentTheme.text} 55%, ${currentTheme.accent} 55%)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', display: 'inline-block', minHeight: '1em' }}>
+                  {data.mainTitle}
+                </h1>
+                <div className="flex items-center gap-4 mt-[-15px] mb-8">
+                  <div className="h-[2px] w-20" style={{ backgroundColor: currentTheme.accent }}></div>
+                  <span className="text-[18px] font-mono font-black tracking-[0.3em] uppercase" style={{ color: currentTheme.accent }}>Headline Design Archive</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-12 mb-6">
+              <div className="flex flex-col relative z-20 shrink-0">
+                <span className="text-[20px] font-bold tracking-[0.4em] mb-2 uppercase opacity-60">AUTHENTICATED BY</span>
+                <span contentEditable={!isExport} suppressContentEditableWarning onBlur={(e) => updateDataField('author', e.currentTarget.innerText.trim())} className={`text-[56px] font-serif font-black tracking-widest underline decoration-[8px] underline-offset-[16px] outline-none w-fit`} style={{ textDecorationColor: currentTheme.accent }}>
+                  {data.author}
+                </span>
+              </div>
+              <div className="flex-1 flex flex-col gap-8 mt-2 relative">
+                <div className="flex items-center gap-6">
+                  <div className="h-[3px] flex-1 rounded-full opacity-40" style={{ background: `linear-gradient(to right, ${currentTheme.accent}, transparent)` }}></div>
+                  <div className="flex gap-3">
+                     <div className="w-4 h-4 border-[2px] rotate-45" style={{ borderColor: currentTheme.text }}></div>
+                     <div className="w-4 h-4 border-[2px] rotate-45 opacity-50" style={{ borderColor: currentTheme.text }}></div>
+                  </div>
+                </div>
+                <div className="flex items-end gap-4 h-32">
+                  <div className="w-6 h-full rounded-sm opacity-10" style={{ backgroundColor: currentTheme.text }}></div>
+                  <div className="w-6 h-[60%] rounded-sm opacity-30" style={{ backgroundColor: currentTheme.accent }}></div>
+                  <div className="w-6 h-[85%] rounded-sm" style={{ backgroundColor: currentTheme.accent }}></div>
+                  <div className="w-6 h-[40%] rounded-sm opacity-50" style={{ backgroundColor: currentTheme.text }}></div>
+                  <div className="w-6 h-[70%] rounded-sm opacity-20" style={{ backgroundColor: currentTheme.accent }}></div>
+                  <div className="flex-1 flex flex-col items-end gap-3 pr-4 opacity-40">
+                    <span className={`text-[16px] font-mono font-bold tracking-[0.2em] uppercase outline-none`}>A GRAND DEATH, OR A HOPELESS LOVE</span>
+                    <div className="w-full h-[2px]" style={{ backgroundColor: currentTheme.text }}></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-[30px] relative">
+              <div className="w-full relative z-10">
+                <div className="flex gap-14 items-start">
+                  <div className="flex-1 relative">
+                    <div className="absolute -top-10 -left-10 text-[160px] font-serif font-black select-none pointer-events-none opacity-5" style={{ color: currentTheme.accent }}>“</div>
+                    <div className="backdrop-blur-lg p-[40px] rounded-[32px] shadow-2xl border-t-[1px] border-l-[1px] relative overflow-hidden" style={{ backgroundColor: currentTheme.card, borderColor: 'rgba(255,255,255,0.2)' }}>
+                      <div className="absolute -right-[30px] -bottom-[30px] pointer-events-none z-0 rotate-[12deg]">
+                         <Hash size={300} strokeWidth={0.3} className="opacity-5" style={{ color: currentTheme.accent }} />
+                      </div>
+                      <div 
+                        contentEditable={!isExport} 
+                        suppressContentEditableWarning 
+                        onBlur={(e) => { updateDataField('intro', e.currentTarget.innerHTML); }} 
+                        className={`text-[42px] mt-2 leading-[1.6] font-serif font-medium outline-none relative z-10 tracking-tight`}
+                        dangerouslySetInnerHTML={{ __html: data.intro }}
+                      />
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-center shrink-0">
+                    <div className="[writing-mode:vertical-lr] text-[20px] font-black tracking-[0.8em] select-none opacity-60 mb-6 uppercase" style={{ color: currentTheme.accent }}>PREFACE</div>
+                    <div className="w-[1px] h-[120px] opacity-40" style={{ background: `linear-gradient(to b, ${currentTheme.accent}, transparent)` }}></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div className={`space-y-[20px] w-full max-w-[1240px] mx-auto mb-[10px] relative z-10 ${!isExport ? 'flex-1' : ''}`}>
+      {itemsToRender.map((item) => {
+        const isCategoryOpen = activePicker?.id === item.id && activePicker?.type === 'category';
+        const isTypeOpen = activePicker?.id === item.id && activePicker?.type === 'type';
+        
+        return (
+          <div key={item.id} className={`group relative flex gap-[110px] items-start transition-all duration-500 p-[40px] -mx-[40px] rounded-[70px]`}>
+            <div className="flex flex-col items-end pt-[22px] min-w-[260px] relative">
+              <span className="text-[120px] font-serif italic leading-none mb-[32px] font-black opacity-10" style={{ color: currentTheme.accent }}>{String(data.items.findIndex(i => i.id === item.id) + 1).padStart(2, '0')}</span>
+              <span contentEditable={!isExport} suppressContentEditableWarning onBlur={(e) => updateItemField(item.id, 'date', e.currentTarget.innerText.trim())} className={`text-[34px] font-mono font-black tracking-widest outline-none`}>{item.date}</span>
+              
+              <div className="relative mt-4">
+                <div 
+                  onClick={(e) => { e.stopPropagation(); if (!isExport) { setActivePicker(isCategoryOpen ? null : {id: item.id, type: 'category'}); } }} 
+                  className={`flex items-center justify-center px-8 py-3 rounded-full cursor-pointer transition-all ${!isExport ? 'bg-white/40 shadow-sm hover:bg-white/60' : ''}`} 
+                  style={{ backgroundColor: `${currentTheme.accent}22` }}
+                >
+                  <span className="text-[26px] tracking-[0.4em] font-black uppercase pl-[0.4em]" style={{ color: currentTheme.text }}>{item.category}</span>
+                  {!isExport && <ChevronDown size={24} className={`ml-2 opacity-40 transition-transform ${isCategoryOpen ? 'rotate-180' : ''}`} />}
+                </div>
+                {!isExport && isCategoryOpen && (
+                  <InlinePicker 
+                    id={item.id} 
+                    type="category" 
+                    currentVal={item.category}
+                    savedCategories={data.savedCategories}
+                    savedTypes={data.savedTypes}
+                    currentTheme={currentTheme}
+                    updateItemField={updateItemField}
+                    setActivePicker={setActivePicker}
+                    setShowTagManager={setShowTagManager}
+                  />
+                )}
+              </div>
+            </div>
+
+            <div className="flex-1 flex flex-col">
+              <div className="flex justify-between items-start mb-[30px]">
+                <h2 contentEditable={!isExport} suppressContentEditableWarning onBlur={(e) => updateItemField(item.id, 'title', e.currentTarget.innerText.trim())} className={`text-[76px] font-serif font-black leading-tight tracking-tight outline-none w-full min-h-[1em]`}>{item.title}</h2>
+                {!isExport && (
+                  <div className="flex gap-4 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                    <button onClick={(e) => { e.stopPropagation(); removeItem(item.id, e); }} className="p-5 bg-white shadow-xl text-red-500 rounded-full active:scale-90 transition-transform"><Trash2 size={36} /></button>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center gap-[35px] mb-[30px] relative">
+                <div className="h-[3px] w-[110px]" style={{ backgroundColor: currentTheme.accent }}></div>
+                <div className="relative">
+                  <span 
+                    onClick={(e) => { e.stopPropagation(); if (!isExport) { setActivePicker(isTypeOpen ? null : {id: item.id, type: 'type'}); } }}
+                    className={`text-[34px] italic font-black uppercase opacity-60 outline-none flex items-center gap-4 cursor-pointer px-4 py-2 rounded-xl transition-all hover:bg-black/5`}
+                  >
+                    {item.type} 
+                    {!isExport && <ChevronDown size={20} className={`opacity-30 transition-transform ${isTypeOpen ? 'rotate-180' : ''}`} />}
+                  </span>
+                  {!isExport && isTypeOpen && (
+                    <InlinePicker 
+                      id={item.id} 
+                      type="type" 
+                      currentVal={item.type}
+                      savedCategories={data.savedCategories}
+                      savedTypes={data.savedTypes}
+                      currentTheme={currentTheme}
+                      updateItemField={updateItemField}
+                      setActivePicker={setActivePicker}
+                      setShowTagManager={setShowTagManager}
+                    />
+                  )}
+                </div>
+              </div>
+
+              <div 
+                contentEditable={!isExport} 
+                suppressContentEditableWarning 
+                onBlur={(e) => {
+                  updateItemField(item.id, 'content', e.currentTarget.innerHTML);
+                }}
+                onPaste={(e) => handlePaste(item.id, 'content', e)}
+                className={`text-[44px] leading-[1.85] font-serif text-justify whitespace-pre-wrap break-words break-all outline-none w-full min-h-[1em] mb-8`}
+                dangerouslySetInnerHTML={{ __html: item.content }}
+              />
+
+              <div className="flex items-start gap-12 border-t-[1px] pt-8" style={{ borderColor: `${currentTheme.text}22` }}>
+                <div className="shrink-0 flex flex-col items-center">
+                  <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4 shadow-lg" style={{ backgroundColor: currentTheme.accent }}>
+                    <Quote size={32} color="white" />
+                  </div>
+                  <span className="[writing-mode:vertical-lr] text-[20px] font-mono font-black tracking-[0.2em] opacity-40 uppercase">THOUGHTS</span>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-[28px] font-serif font-black mb-6 tracking-widest uppercase opacity-80" style={{ color: currentTheme.accent }}>{data.author}有话说 / {data.author.toUpperCase()}'S MESSAGE</h3>
+                  <div 
+                    contentEditable={!isExport} 
+                    suppressContentEditableWarning 
+                    onBlur={(e) => {
+                      updateItemField(item.id, 'thoughts', e.currentTarget.innerHTML);
+                    }}
+                    onPaste={(e) => handlePaste(item.id, 'thoughts', e)}
+                    className="text-[40px] leading-[1.8] font-serif font-light italic break-words break-all outline-none w-full whitespace-pre-wrap opacity-90 min-h-[1em]"
+                    dangerouslySetInnerHTML={{ __html: item.thoughts }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+
+    <div className={`relative z-10 shrink-0 ${!isExport ? 'mt-auto' : 'mt-[5px]'}`}>
+      <div className="w-full h-[4px] mb-[20px] flex gap-4">
+         <div className="flex-1 h-full rounded-full" style={{ backgroundColor: `${currentTheme.text}1A` }}></div>
+         <div className="w-20 h-full rounded-full" style={{ backgroundColor: currentTheme.accent }}></div>
+      </div>
+      <div className="grid grid-cols-12 gap-8 items-end">
+        <div className="col-span-8 flex flex-col gap-4 justify-center">
+          <span className="text-[42px] font-serif font-black tracking-[0.2em] leading-none">年度作品 PROJECT</span>
+          <span className="text-[22px] font-mono font-bold opacity-80 uppercase tracking-[0.6em] font-black leading-none">ALL RIGHTS RESERVED.</span>
+        </div>
+        <div className="col-span-4 flex flex-col items-end gap-4 text-right">
+           <span className="text-[20px] font-mono font-black tracking-widest uppercase opacity-40 leading-none">STATUS: LOGGED / MASTERPIECE</span>
+           <div className="h-[2px] w-[220px]" style={{ background: `linear-gradient(to right, transparent, ${currentTheme.accent})` }}></div>
+           <span className="text-[40px] font-serif font-black tracking-tight leading-none">© {data.year} <span style={{ color: currentTheme.accent }}>{data.author}</span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
 const App = () => {
   const [data, setData] = useState<SummaryData>({
     mainTitle: '衔书又止',
@@ -89,14 +420,14 @@ const App = () => {
     intro: '人类总喜欢给万物下定义，好像不说清楚我是谁、你是什么，第二天太阳就不会升起来一样',
     summaryType: '彩云易散琉璃脆',
     themeId: 'rose',
-    savedCategories: [],
-    savedTypes: [],
+    savedCategories: ['文稿'],
+    savedTypes: ['游戏掉落鉴', '段子体', '人生四格', '常稿', '短打', '猫塑', '黄油鉴'],
     items: [
       {
         id: 'init-1',
         title: '',
         date: GET_CURRENT_DATE(),
-        category: '未分类',
+        category: '文稿',
         type: '无',
         content: DEFAULT_TEXT,
         thoughts: DEFAULT_TEXT
@@ -309,7 +640,7 @@ const App = () => {
         useCORS: true,
         includeQueryParams: true,
         filter: (el: HTMLElement) => {
-          if (el.tagName === 'LINK' && !el.getAttribute('href')) return false;
+          if (el.tagName === 'LINK' && !el.getAttribute( 'href')) return false;
           return true;
         },
         style: {
@@ -407,252 +738,6 @@ const App = () => {
     );
   };
 
-  const InlinePicker = ({ id, type, currentVal }: { id: string, type: 'category' | 'type', currentVal: string }) => {
-    const list = type === 'category' ? data.savedCategories : data.savedTypes;
-    return (
-      <div className="absolute top-[calc(100%+16px)] left-0 z-[100] w-[220px] bg-white/90 backdrop-blur-2xl rounded-[32px] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.15)] border border-white p-1.5 animate-in fade-in zoom-in slide-in-from-top-4 duration-300 origin-top-left" onClick={e => e.stopPropagation()}>
-        <div className="max-h-[500px] overflow-y-auto no-scrollbar py-1">
-          {list.length > 0 ? list.map((val, i) => (
-            <button 
-              key={i} 
-              onClick={() => {
-                updateItemField(id, type, val);
-                setActivePicker(null);
-              }}
-              className={`w-full group relative flex items-center px-4 py-3 rounded-[24px] transition-all duration-300 ${val === currentVal ? 'bg-black/5' : 'hover:bg-black/[0.03] active:scale-[0.96]'}`}
-            >
-              <div className={`w-1.5 h-6 rounded-full mr-3 transition-all duration-300 ${val === currentVal ? 'scale-y-100 opacity-100' : 'scale-y-0 opacity-0'}`} style={{ backgroundColor: currentTheme.accent }}></div>
-              <span className={`text-[40px] font-black leading-none tracking-tighter truncate ${type === 'type' ? 'italic font-serif' : ''}`} style={{ color: val === currentVal ? currentTheme.accent : 'inherit' }}>{val}</span>
-            </button>
-          )) : (
-            <div className="py-8 px-4 text-center flex flex-col items-center gap-4 animate-in fade-in duration-500">
-              <div className="w-12 h-12 rounded-full bg-black/5 flex items-center justify-center mb-1">
-                <PlusCircle size={24} className="text-black/20" />
-              </div>
-              <p className="text-[40px] font-black text-black/30 leading-none">暂无</p>
-              <button onClick={() => { setActivePicker(null); setShowTagManager(true); }} className="text-[20px] font-black uppercase tracking-widest text-black/60 hover:text-black transition-colors underline decoration-2 underline-offset-4">去添加</button>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  };
-
-  const SummaryCanvas = ({ itemsToRender, isExport = false }: { itemsToRender: SummaryItem[], isExport?: boolean }) => (
-    <div 
-      ref={isExport ? exportContainerRef : canvasRef}
-      style={{ 
-        width: '1440px',
-        backgroundColor: currentTheme.bg,
-        minHeight: isExport ? 'auto' : '2560px',
-        paddingBottom: '30px',
-        transition: 'none'
-      }}
-      className={`text-[${currentTheme.text}] pt-[20px] px-[100px] flex flex-col relative overflow-hidden`}
-    >
-      <div className="absolute inset-0 opacity-[0.2] pointer-events-none" style={{ backgroundImage: TEXTURE_URL, backgroundSize: '64px 64px' }}></div>
-      
-      <div className="w-full flex flex-col mb-[20px] relative z-10 shrink-0">
-        <div className="flex justify-between items-end border-b-[4px] border-current pb-8 mb-[60px]" style={{ color: currentTheme.text }}>
-          <div className="flex flex-col">
-            <span contentEditable={!isExport} suppressContentEditableWarning onBlur={(e) => updateDataField('summaryType', e.currentTarget.innerText.trim())} className={`font-serif text-[32px] tracking-[0.2em] font-black outline-none`}>
-              {data.summaryType}
-            </span>
-          </div>
-          <div className="text-right">
-            <span className="font-mono text-[22px] tracking-[0.3em] font-bold block uppercase opacity-60">ISSUE NO. {data.year.slice(-2)}</span>
-            <span className="font-mono text-[22px] tracking-[0.3em] font-bold uppercase whitespace-nowrap opacity-60">ARCHIVE INDEX 001</span>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-12 gap-[40px] items-start">
-          <div className="col-span-1 flex flex-col items-center pt-8">
-             <div className="rotate-180 [writing-mode:vertical-lr] font-serif text-[130px] font-black leading-none tracking-widest select-none outline-none opacity-20">{data.year}</div>
-             <div className="w-[4px] h-[300px] mt-8 opacity-20" style={{ backgroundColor: currentTheme.accent }}></div>
-          </div>
-
-          <div className="col-span-11 pl-10 relative">
-            <div className="absolute -left-[40px] top-[40px] w-[80px] h-[8px]" style={{ backgroundColor: currentTheme.accent }}></div>
-            <div className="relative mb-4">
-              <div className="flex items-end mb-4">
-                <div className="flex-1 relative">
-                  <span className="absolute -top-[35px] left-2 text-[20px] font-mono font-bold tracking-[0.8em] uppercase opacity-40">Yearly Chronicle</span>
-                  <div className="absolute -left-6 top-8 w-40 h-40 rounded-full -z-10 opacity-10" style={{ backgroundColor: currentTheme.accent }}></div>
-                  <h1 contentEditable={!isExport} suppressContentEditableWarning onBlur={(e) => updateDataField('mainTitle', e.currentTarget.innerText.trim())} className={`text-[170px] font-serif font-black leading-[1.1] tracking-tighter outline-none relative`} style={{ backgroundImage: `linear-gradient(to right, ${currentTheme.text} 55%, ${currentTheme.accent} 55%)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', display: 'inline-block', minHeight: '1em' }}>
-                    {data.mainTitle}
-                  </h1>
-                  <div className="flex items-center gap-4 mt-[-15px] mb-8">
-                    <div className="h-[2px] w-20" style={{ backgroundColor: currentTheme.accent }}></div>
-                    <span className="text-[18px] font-mono font-black tracking-[0.3em] uppercase" style={{ color: currentTheme.accent }}>Headline Design Archive</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-12 mb-6">
-                <div className="flex flex-col relative z-20 shrink-0">
-                  <span className="text-[20px] font-bold tracking-[0.4em] mb-2 uppercase opacity-60">AUTHENTICATED BY</span>
-                  <span contentEditable={!isExport} suppressContentEditableWarning onBlur={(e) => updateDataField('author', e.currentTarget.innerText.trim())} className={`text-[56px] font-serif font-black tracking-widest underline decoration-[8px] underline-offset-[16px] outline-none w-fit`} style={{ textDecorationColor: currentTheme.accent }}>
-                    {data.author}
-                  </span>
-                </div>
-                <div className="flex-1 flex flex-col gap-8 mt-2 relative">
-                  <div className="flex items-center gap-6">
-                    <div className="h-[3px] flex-1 rounded-full opacity-40" style={{ background: `linear-gradient(to right, ${currentTheme.accent}, transparent)` }}></div>
-                    <div className="flex gap-3">
-                       <div className="w-4 h-4 border-[2px] rotate-45" style={{ borderColor: currentTheme.text }}></div>
-                       <div className="w-4 h-4 border-[2px] rotate-45 opacity-50" style={{ borderColor: currentTheme.text }}></div>
-                    </div>
-                  </div>
-                  <div className="flex items-end gap-4 h-32">
-                    <div className="w-6 h-full rounded-sm opacity-10" style={{ backgroundColor: currentTheme.text }}></div>
-                    <div className="w-6 h-[60%] rounded-sm opacity-30" style={{ backgroundColor: currentTheme.accent }}></div>
-                    <div className="w-6 h-[85%] rounded-sm" style={{ backgroundColor: currentTheme.accent }}></div>
-                    <div className="w-6 h-[40%] rounded-sm opacity-50" style={{ backgroundColor: currentTheme.text }}></div>
-                    <div className="w-6 h-[70%] rounded-sm opacity-20" style={{ backgroundColor: currentTheme.accent }}></div>
-                    <div className="flex-1 flex flex-col items-end gap-3 pr-4 opacity-40">
-                      <span className={`text-[16px] font-mono font-bold tracking-[0.2em] uppercase outline-none`}>A GRAND DEATH, OR A HOPELESS LOVE</span>
-                      <div className="w-full h-[2px]" style={{ backgroundColor: currentTheme.text }}></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-[30px] relative">
-                <div className="w-full relative z-10">
-                  <div className="flex gap-14 items-start">
-                    <div className="flex-1 relative">
-                      <div className="absolute -top-10 -left-10 text-[160px] font-serif font-black select-none pointer-events-none opacity-5" style={{ color: currentTheme.accent }}>“</div>
-                      <div className="backdrop-blur-lg p-[40px] rounded-[32px] shadow-2xl border-t-[1px] border-l-[1px] relative overflow-hidden" style={{ backgroundColor: currentTheme.card, borderColor: 'rgba(255,255,255,0.2)' }}>
-                        <div className="absolute -right-[30px] -bottom-[30px] pointer-events-none z-0 rotate-[12deg]">
-                           <Hash size={300} strokeWidth={0.3} className="opacity-5" style={{ color: currentTheme.accent }} />
-                        </div>
-                        <div 
-                          contentEditable={!isExport} 
-                          suppressContentEditableWarning 
-                          onBlur={(e) => { updateDataField('intro', e.currentTarget.innerHTML); }} 
-                          className={`text-[42px] mt-2 leading-[1.6] font-serif font-medium outline-none relative z-10 tracking-tight`}
-                          dangerouslySetInnerHTML={{ __html: data.intro }}
-                        />
-                      </div>
-                    </div>
-                    <div className="flex flex-col items-center shrink-0">
-                      <div className="[writing-mode:vertical-lr] text-[20px] font-black tracking-[0.8em] select-none opacity-60 mb-6 uppercase" style={{ color: currentTheme.accent }}>PREFACE</div>
-                      <div className="w-[1px] h-[120px] opacity-40" style={{ background: `linear-gradient(to b, ${currentTheme.accent}, transparent)` }}></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className={`space-y-[20px] w-full max-w-[1240px] mx-auto mb-[10px] relative z-10 ${!isExport ? 'flex-1' : ''}`}>
-        {itemsToRender.map((item) => {
-          const isCategoryOpen = activePicker?.id === item.id && activePicker?.type === 'category';
-          const isTypeOpen = activePicker?.id === item.id && activePicker?.type === 'type';
-          
-          return (
-            <div key={item.id} className={`group relative flex gap-[110px] items-start transition-all duration-500 p-[40px] -mx-[40px] rounded-[70px]`}>
-              <div className="flex flex-col items-end pt-[22px] min-w-[260px] relative">
-                <span className="text-[120px] font-serif italic leading-none mb-[32px] font-black opacity-10" style={{ color: currentTheme.accent }}>{String(data.items.findIndex(i => i.id === item.id) + 1).padStart(2, '0')}</span>
-                <span contentEditable={!isExport} suppressContentEditableWarning onBlur={(e) => updateItemField(item.id, 'date', e.currentTarget.innerText.trim())} className={`text-[34px] font-mono font-black tracking-widest outline-none`}>{item.date}</span>
-                
-                <div className="relative mt-4">
-                  <div 
-                    onClick={(e) => { e.stopPropagation(); if (!isExport) { setActivePicker(isCategoryOpen ? null : {id: item.id, type: 'category'}); } }} 
-                    className={`flex items-center justify-center px-8 py-3 rounded-full cursor-pointer transition-all ${!isExport ? 'bg-white/40 shadow-sm hover:bg-white/60' : ''}`} 
-                    style={{ backgroundColor: `${currentTheme.accent}22` }}
-                  >
-                    <span className="text-[26px] tracking-[0.4em] font-black uppercase pl-[0.4em]" style={{ color: currentTheme.text }}>{item.category}</span>
-                    {!isExport && <ChevronDown size={24} className={`ml-2 opacity-40 transition-transform ${isCategoryOpen ? 'rotate-180' : ''}`} />}
-                  </div>
-                  {!isExport && isCategoryOpen && <InlinePicker id={item.id} type="category" currentVal={item.category} />}
-                </div>
-              </div>
-
-              <div className="flex-1 flex flex-col">
-                <div className="flex justify-between items-start mb-[30px]">
-                  <h2 contentEditable={!isExport} suppressContentEditableWarning onBlur={(e) => updateItemField(item.id, 'title', e.currentTarget.innerText.trim())} className={`text-[76px] font-serif font-black leading-tight tracking-tight outline-none w-full min-h-[1em]`}>{item.title}</h2>
-                  {!isExport && (
-                    <div className="flex gap-4 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                      <button onClick={(e) => { e.stopPropagation(); removeItem(item.id, e); }} className="p-5 bg-white shadow-xl text-red-500 rounded-full active:scale-90 transition-transform"><Trash2 size={36} /></button>
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex items-center gap-[35px] mb-[30px] relative">
-                  <div className="h-[3px] w-[110px]" style={{ backgroundColor: currentTheme.accent }}></div>
-                  <div className="relative">
-                    <span 
-                      onClick={(e) => { e.stopPropagation(); if (!isExport) { setActivePicker(isTypeOpen ? null : {id: item.id, type: 'type'}); } }}
-                      className={`text-[34px] italic font-black uppercase opacity-60 outline-none flex items-center gap-4 cursor-pointer px-4 py-2 rounded-xl transition-all hover:bg-black/5`}
-                    >
-                      {item.type} 
-                      {!isExport && <ChevronDown size={20} className={`opacity-30 transition-transform ${isTypeOpen ? 'rotate-180' : ''}`} />}
-                    </span>
-                    {!isExport && isTypeOpen && <InlinePicker id={item.id} type="type" currentVal={item.type} />}
-                  </div>
-                </div>
-
-                <div 
-                  contentEditable={!isExport} 
-                  suppressContentEditableWarning 
-                  onInput={(e) => {
-                    updateItemField(item.id, 'content', e.currentTarget.innerHTML);
-                  }}
-                  onPaste={(e) => handlePaste(item.id, 'content', e)}
-                  className={`text-[44px] leading-[1.85] font-serif text-justify whitespace-pre-wrap break-words break-all outline-none w-full min-h-[1em] mb-8`}
-                  dangerouslySetInnerHTML={{ __html: item.content }}
-                />
-
-                <div className="flex items-start gap-12 border-t-[1px] pt-8" style={{ borderColor: `${currentTheme.text}22` }}>
-                  <div className="shrink-0 flex flex-col items-center">
-                    <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4 shadow-lg" style={{ backgroundColor: currentTheme.accent }}>
-                      <Quote size={32} color="white" />
-                    </div>
-                    <span className="[writing-mode:vertical-lr] text-[20px] font-mono font-black tracking-[0.2em] opacity-40 uppercase">THOUGHTS</span>
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-[28px] font-serif font-black mb-6 tracking-widest uppercase opacity-80" style={{ color: currentTheme.accent }}>{data.author}有话说 / {data.author.toUpperCase()}'S MESSAGE</h3>
-                    <div 
-                      contentEditable={!isExport} 
-                      suppressContentEditableWarning 
-                      onInput={(e) => {
-                        updateItemField(item.id, 'thoughts', e.currentTarget.innerHTML);
-                      }}
-                      onPaste={(e) => handlePaste(item.id, 'thoughts', e)}
-                      className="text-[40px] leading-[1.8] font-serif font-light italic break-words break-all outline-none w-full whitespace-pre-wrap opacity-90 min-h-[1em]"
-                      dangerouslySetInnerHTML={{ __html: item.thoughts }}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      <div className={`relative z-10 shrink-0 ${!isExport ? 'mt-auto' : 'mt-[5px]'}`}>
-        <div className="w-full h-[4px] mb-[20px] flex gap-4">
-           <div className="flex-1 h-full rounded-full" style={{ backgroundColor: `${currentTheme.text}1A` }}></div>
-           <div className="w-20 h-full rounded-full" style={{ backgroundColor: currentTheme.accent }}></div>
-        </div>
-        <div className="grid grid-cols-12 gap-8 items-end">
-          <div className="col-span-8 flex flex-col gap-4 justify-center">
-            <span className="text-[42px] font-serif font-black tracking-[0.2em] leading-none">年度作品 PROJECT</span>
-            <span className="text-[22px] font-mono font-bold opacity-80 uppercase tracking-[0.6em] font-black leading-none">ALL RIGHTS RESERVED.</span>
-          </div>
-          <div className="col-span-4 flex flex-col items-end gap-4 text-right">
-             <span className="text-[20px] font-mono font-black tracking-widest uppercase opacity-40 leading-none">STATUS: LOGGED / MASTERPIECE</span>
-             <div className="h-[2px] w-[220px]" style={{ background: `linear-gradient(to right, transparent, ${currentTheme.accent})` }}></div>
-             <span className="text-[40px] font-serif font-black tracking-tight leading-none">© {data.year} <span style={{ color: currentTheme.accent }}>{data.author}</span></span>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
   const handleGlobalClick = () => {
     setActivePicker(null); 
     setShowExportMenu(false); 
@@ -668,14 +753,39 @@ const App = () => {
       
       {isExporting && (
         <div className="absolute left-[-4000px] top-0 pointer-events-none" style={{ width: '1440px' }}>
-          <SummaryCanvas itemsToRender={renderingItems} isExport={true} />
+          <SummaryCanvas 
+            data={data} 
+            currentTheme={currentTheme} 
+            itemsToRender={renderingItems} 
+            isExport={true} 
+            exportContainerRef={exportContainerRef}
+            updateDataField={updateDataField}
+            updateItemField={updateItemField}
+            removeItem={removeItem}
+            activePicker={activePicker}
+            setActivePicker={setActivePicker}
+            handlePaste={handlePaste}
+            setShowTagManager={setShowTagManager}
+          />
         </div>
       )}
 
       <main ref={scrollContainerRef} onScroll={handleScroll} className="flex-1 overflow-y-auto no-scrollbar scroll-smooth overflow-x-hidden">
         <div style={{ width: '100%', height: `${canvasRealHeight * scale}px`, position: 'relative' }}>
           <div style={{ width: '1440px', transform: `scale(${scale})`, transformOrigin: 'top left', position: 'absolute', top: 0, left: 0 }}>
-            <SummaryCanvas itemsToRender={data.items} />
+            <SummaryCanvas 
+              data={data} 
+              currentTheme={currentTheme} 
+              itemsToRender={data.items} 
+              canvasRef={canvasRef}
+              updateDataField={updateDataField}
+              updateItemField={updateItemField}
+              removeItem={removeItem}
+              activePicker={activePicker}
+              setActivePicker={setActivePicker}
+              handlePaste={handlePaste}
+              setShowTagManager={setShowTagManager}
+            />
           </div>
         </div>
         <div className="h-[30px] pointer-events-none" />
@@ -771,7 +881,7 @@ const App = () => {
               </div>
             ) : (
               <div className="flex items-center gap-2 w-full flex-nowrap animate-in fade-in duration-300">
-                <div className="flex-1 relative min-w-0">
+                <div className="flex-1 relative min-0">
                   <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                   <input 
                     value={batchSearchTerm} 
@@ -795,37 +905,38 @@ const App = () => {
         <footer className="h-14 flex items-center justify-around px-4 safe-area-bottom shrink-0">
           <div className="relative">
             {showConfig && (
-              <div className="absolute bottom-[110%] left-[0px] mb-5 w-[calc(100vw-32px)] max-w-[320px] bg-white/95 backdrop-blur-3xl rounded-[32px] shadow-[0_20px_40px_-12px_rgba(0,0,0,0.3)] border border-white/60 p-6 animate-in slide-in-from-bottom-3 fade-in duration-300 z-[300]" onClick={e => e.stopPropagation()}>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-sm font-black text-gray-800 tracking-tight flex items-center gap-2">
-                      <Layout size={16} /> 编辑概览
-                    </h3>
-                    <button onClick={() => setShowConfig(false)} className="text-gray-400"><X size={16}/></button>
+              <div className="absolute bottom-[110%] left-[0px] mb-5 w-[calc(100vw-32px)] max-w-[340px] bg-white/85 backdrop-blur-3xl rounded-[40px] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.3)] border border-white/60 p-7 animate-in slide-in-from-bottom-3 fade-in duration-500 z-[300]" onClick={e => e.stopPropagation()}>
+                <div className="space-y-5">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-1.5 h-6 rounded-full" style={{ backgroundColor: currentTheme.accent }}></div>
+                      <h3 className="text-[18px] font-serif font-black text-gray-800 tracking-tight">编辑概览 / ARCHIVE</h3>
+                    </div>
+                    <button onClick={() => setShowConfig(false)} className="text-gray-300 hover:text-black transition-colors"><X size={20}/></button>
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1">标题</label>
-                      <input value={data.mainTitle} onChange={e => updateDataField('mainTitle', e.target.value)} className="w-full bg-black/5 px-4 py-3 rounded-2xl text-xs font-serif font-black outline-none focus:bg-white transition-all" />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-[9px] font-mono font-black text-gray-400 uppercase tracking-[0.3em] pl-1">Project Title</label>
+                      <input value={data.mainTitle} onChange={e => updateDataField('mainTitle', e.target.value)} className="w-full bg-black/[0.03] px-5 py-4 rounded-[24px] text-xs font-serif font-black outline-none focus:bg-white border border-transparent focus:border-black/[0.05] transition-all" />
                     </div>
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1">作者</label>
-                      <input value={data.author} onChange={e => updateDataField('author', e.target.value)} className="w-full bg-black/5 px-4 py-3 rounded-2xl text-xs font-black outline-none focus:bg-white transition-all" />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1">类型</label>
-                      <input value={data.summaryType} onChange={e => updateDataField('summaryType', e.target.value)} className="w-full bg-black/5 px-4 py-3 rounded-2xl text-xs font-bold outline-none focus:bg-white transition-all" />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1">年份</label>
-                      <input value={data.year} onChange={e => updateDataField('year', e.target.value)} className="w-full bg-black/5 px-4 py-3 rounded-2xl text-xs font-mono font-black outline-none focus:bg-white transition-all" />
+                    <div className="space-y-1.5">
+                      <label className="text-[9px] font-mono font-black text-gray-400 uppercase tracking-[0.3em] pl-1">Author Name</label>
+                      <input value={data.author} onChange={e => updateDataField('author', e.target.value)} className="w-full bg-black/[0.03] px-5 py-4 rounded-[24px] text-xs font-black outline-none focus:bg-white border border-transparent focus:border-black/[0.05] transition-all" />
                     </div>
                   </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1">范例</label>
-                    <textarea value={data.intro} onChange={e => updateDataField('intro', e.target.value)} className="w-full bg-black/5 px-4 py-3 rounded-2xl text-[11px] font-serif font-medium outline-none focus:bg-white transition-all min-h-[100px] leading-relaxed resize-none" placeholder="填写范例或总结前言..." />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-[9px] font-mono font-black text-gray-400 uppercase tracking-[0.3em] pl-1">Genre Type</label>
+                      <input value={data.summaryType} onChange={e => updateDataField('summaryType', e.target.value)} className="w-full bg-black/[0.03] px-5 py-4 rounded-[24px] text-xs font-bold outline-none focus:bg-white border border-transparent focus:border-black/[0.05] transition-all" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[9px] font-mono font-black text-gray-400 uppercase tracking-[0.3em] pl-1">Project Year</label>
+                      <input value={data.year} onChange={e => updateDataField('year', e.target.value)} className="w-full bg-black/[0.03] px-5 py-4 rounded-[24px] text-xs font-mono font-black outline-none focus:bg-white border border-transparent focus:border-black/[0.05] transition-all" />
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[9px] font-mono font-black text-gray-400 uppercase tracking-[0.3em] pl-1">Exhibition Preface</label>
+                    <textarea value={data.intro} onChange={e => updateDataField('intro', e.target.value)} className="w-full bg-black/[0.03] px-6 py-5 rounded-[30px] text-[12px] font-serif font-medium outline-none focus:bg-white border border-transparent focus:border-black/[0.05] transition-all min-h-[120px] leading-relaxed resize-none" placeholder="填写范例或总结前言..." />
                   </div>
                 </div>
               </div>
@@ -838,41 +949,52 @@ const App = () => {
 
           <div className="relative">
             {showTagManager && (
-              <div className="absolute bottom-[110%] left-[-20px] mb-5 w-[calc(100vw-32px)] max-w-[300px] bg-white/95 backdrop-blur-3xl rounded-[32px] shadow-[0_20px_40px_-12px_rgba(0,0,0,0.3)] border border-white/60 p-6 animate-in slide-in-from-bottom-3 fade-in duration-300 z-[300]" onClick={e => e.stopPropagation()}>
-                <div className="space-y-5">
-                  <h3 className="text-sm font-black text-gray-800 tracking-tight flex items-center gap-2 mb-2">
-                    <Tags size={16} /> 标签库管理
-                  </h3>
-                  <div className="space-y-4 max-h-[300px] overflow-y-auto no-scrollbar">
-                    <div className="space-y-2">
-                      <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest pl-1">分类管理</label>
+              <div className="absolute bottom-[110%] left-[-40px] mb-5 w-[calc(100vw-32px)] max-w-[360px] bg-white/85 backdrop-blur-3xl rounded-[40px] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.3)] border border-white/60 p-8 animate-in slide-in-from-bottom-3 fade-in duration-500 z-[300]" onClick={e => e.stopPropagation()}>
+                <div className="space-y-7">
+                  <div className="flex items-center justify-between">
+                    <div className="flex flex-col">
+                      <h3 className="text-[20px] font-serif font-black text-gray-800 leading-none">库管理 / STORAGE</h3>
+                      <span className="text-[9px] font-mono font-bold tracking-[0.4em] uppercase opacity-30 mt-1">Tags & Categories Library</span>
+                    </div>
+                    <button onClick={() => setShowTagManager(false)} className="text-gray-300 hover:text-black"><X size={20} /></button>
+                  </div>
+                  
+                  <div className="space-y-7 max-h-[440px] overflow-y-auto no-scrollbar pr-1">
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between pl-1">
+                        <label className="text-[10px] font-mono font-black text-black/60 uppercase tracking-[0.3em]">Categories</label>
+                        <div className="h-[1px] flex-1 mx-4 bg-black/[0.05]"></div>
+                      </div>
                       <div className="flex flex-wrap gap-2">
                         {data.savedCategories.map((cat, i) => (
-                          <div key={i} className="flex items-center gap-1.5 bg-black/5 px-3 py-1.5 rounded-full text-[10px] font-black">
+                          <div key={i} className="flex items-center gap-2 bg-black/[0.03] border border-white px-4 py-2 rounded-full text-[10px] font-black group hover:bg-black/[0.06] transition-all">
                             {cat}
-                            <button onClick={() => setData(prev => ({...prev, savedCategories: prev.savedCategories.filter(c => c !== cat)}))} className="text-gray-400 hover:text-red-500"><X size={10} /></button>
+                            <button onClick={() => setData(prev => ({...prev, savedCategories: prev.savedCategories.filter(c => c !== cat)}))} className="text-gray-300 hover:text-red-500 transition-colors"><X size={12} /></button>
                           </div>
                         ))}
                       </div>
                       <div className="flex gap-2">
-                        <input value={newCatInput} onChange={e => setNewCatInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && addCategory()} placeholder="新分类" className="flex-1 bg-black/5 rounded-xl px-4 py-2.5 text-[10px] font-bold outline-none focus:bg-white transition-all" />
-                        <button onClick={addCategory} className="bg-black text-white px-3 rounded-xl active:scale-90 transition-transform"><Plus size={14} /></button>
+                        <input value={newCatInput} onChange={e => setNewCatInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && addCategory()} placeholder="Add New..." className="flex-1 bg-black/[0.03] rounded-[20px] px-5 py-3 text-[10px] font-bold outline-none focus:bg-white border border-transparent focus:border-black/[0.05] transition-all" />
+                        <button onClick={addCategory} className="bg-black text-white w-10 h-10 flex items-center justify-center rounded-[18px] active:scale-90 transition-transform"><Plus size={16} /></button>
                       </div>
                     </div>
-                    <div className="h-[1px] bg-black/5" />
-                    <div className="space-y-2">
-                      <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest pl-1">标记管理</label>
+
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between pl-1">
+                        <label className="text-[10px] font-mono font-black text-black/60 uppercase tracking-[0.3em]">Format Tags</label>
+                        <div className="h-[1px] flex-1 mx-4 bg-black/[0.05]"></div>
+                      </div>
                       <div className="flex flex-wrap gap-2">
                         {data.savedTypes.map((t, i) => (
-                          <div key={i} className="flex items-center gap-1.5 bg-black/5 px-3 py-1.5 rounded-full text-[10px] font-black italic">
+                          <div key={i} className="flex items-center gap-2 bg-black/[0.03] border border-white px-4 py-2 rounded-full text-[10px] font-black italic group hover:bg-black/[0.06] transition-all">
                             {t}
-                            <button onClick={() => setData(prev => ({...prev, savedTypes: prev.savedTypes.filter(st => st !== t)}))} className="text-gray-400 hover:text-red-500"><X size={10} /></button>
+                            <button onClick={() => setData(prev => ({...prev, savedTypes: prev.savedTypes.filter(st => st !== t)}))} className="text-gray-300 hover:text-red-500 transition-colors"><X size={12} /></button>
                           </div>
                         ))}
                       </div>
                       <div className="flex gap-2">
-                        <input value={newTypeInput} onChange={e => setNewTypeInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && addType()} placeholder="新标记" className="flex-1 bg-black/5 rounded-xl px-4 py-2.5 text-[10px] font-bold outline-none focus:bg-white transition-all" />
-                        <button onClick={addType} className="bg-black text-white px-3 rounded-xl active:scale-90 transition-transform"><Plus size={14} /></button>
+                        <input value={newTypeInput} onChange={e => setNewTypeInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && addType()} placeholder="Add New..." className="flex-1 bg-black/[0.03] rounded-[20px] px-5 py-3 text-[10px] font-bold outline-none focus:bg-white border border-transparent focus:border-black/[0.05] transition-all" />
+                        <button onClick={addType} className="bg-black text-white w-10 h-10 flex items-center justify-center rounded-[18px] active:scale-90 transition-transform"><Plus size={16} /></button>
                       </div>
                     </div>
                   </div>
@@ -891,16 +1013,17 @@ const App = () => {
 
           <div className="relative">
             {showThemePicker && (
-              <div className="absolute bottom-[110%] left-1/2 -translate-x-1/2 mb-5 w-36 bg-white/95 backdrop-blur-3xl rounded-[24px] shadow-[0_20px_40px_-12px_rgba(0,0,0,0.3)] border border-white/60 p-2 animate-in slide-in-from-bottom-3 fade-in duration-300 z-[300]" onClick={e => e.stopPropagation()}>
-                <div className="flex flex-col gap-1">
+              <div className="absolute bottom-[110%] left-1/2 -translate-x-1/2 mb-5 w-[180px] bg-white/85 backdrop-blur-3xl rounded-[32px] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.3)] border border-white/60 p-2.5 animate-in slide-in-from-bottom-3 fade-in duration-500 z-[300]" onClick={e => e.stopPropagation()}>
+                <div className="flex flex-col gap-1.5">
                   {THEMES.map(t => (
                     <button 
                       key={t.id} 
                       onClick={() => { setData({...data, themeId: t.id}); setShowThemePicker(false); }} 
-                      className={`flex items-center gap-3 p-2.5 rounded-2xl transition-all ${data.themeId === t.id ? 'bg-black/5' : 'hover:bg-black/[0.03]'}`}
+                      className={`flex items-center gap-3.5 p-3.5 rounded-[22px] transition-all ${data.themeId === t.id ? 'bg-black/[0.05]' : 'hover:bg-black/[0.02]'}`}
                     >
-                      <div className="w-5 h-5 rounded-full border border-black/5 shadow-inner" style={{ backgroundColor: t.accent }}></div>
-                      <span className={`text-[11px] font-black ${data.themeId === t.id ? 'text-black' : 'text-gray-400'}`}>{t.name}</span>
+                      <div className="w-6 h-6 rounded-full border border-black/5 shadow-inner transition-transform group-hover:scale-110" style={{ backgroundColor: t.accent }}></div>
+                      <span className={`text-[12px] font-black tracking-tight ${data.themeId === t.id ? 'text-black' : 'text-gray-400'}`}>{t.name}</span>
+                      {data.themeId === t.id && <Check size={14} className="ml-auto opacity-40" />}
                     </button>
                   ))}
                 </div>
@@ -914,37 +1037,37 @@ const App = () => {
           
           <div className="relative">
             {showExportMenu && (
-              <div className="absolute bottom-[110%] right-[0px] mb-5 w-32 bg-white/95 backdrop-blur-3xl rounded-[32px] shadow-[0_20px_40px_-12px_rgba(0,0,0,0.3)] border border-white/60 p-2 animate-in slide-in-from-bottom-3 fade-in duration-300 z-[300]" onClick={e => e.stopPropagation()}>
+              <div className="absolute bottom-[110%] right-[0px] mb-5 w-[160px] bg-white/85 backdrop-blur-3xl rounded-[32px] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.3)] border border-white/60 p-2.5 animate-in slide-in-from-bottom-3 fade-in duration-500 z-[300]" onClick={e => e.stopPropagation()}>
                 {exportSubMode === 'main' ? (
-                  <div className="flex flex-col gap-1">
-                    <button onClick={handleExportLong} className="flex flex-col items-center gap-1 p-3 hover:bg-black/5 rounded-2xl transition-all group border-b border-black/5 pb-3">
-                      <Layers size={18} />
-                      <span className="font-black text-[9px] uppercase tracking-tighter text-gray-800">完整长图</span>
+                  <div className="flex flex-col gap-1.5">
+                    <button onClick={handleExportLong} className="flex items-center gap-3 p-4 hover:bg-black/[0.04] rounded-[22px] transition-all group border-b border-black/[0.03] pb-4">
+                      <div className="w-8 h-8 rounded-full bg-black/5 flex items-center justify-center"><Layers size={16} /></div>
+                      <span className="font-black text-[11px] uppercase tracking-tight text-gray-800">完整长图</span>
                     </button>
-                    <button onClick={() => setExportSubMode('select')} className="flex flex-col items-center gap-1 p-3 hover:bg-black/5 rounded-2xl transition-all group">
-                      <CheckSquare size={18} />
-                      <span className="font-black text-[9px] uppercase tracking-tighter text-gray-800">勾选导出</span>
+                    <button onClick={() => setExportSubMode('select')} className="flex items-center gap-3 p-4 hover:bg-black/[0.04] rounded-[22px] transition-all group">
+                      <div className="w-8 h-8 rounded-full bg-black/5 flex items-center justify-center"><CheckSquare size={16} /></div>
+                      <span className="font-black text-[11px] uppercase tracking-tight text-gray-800">勾选导出</span>
                     </button>
                   </div>
                 ) : (
-                  <div className="p-1 flex flex-col gap-3 min-h-[220px]">
-                    <div className="flex items-center justify-between px-1">
-                      <button onClick={() => setExportSubMode('main')} className="text-gray-400"><ChevronLeft size={14} /></button>
-                      <span className="text-[9px] font-black">({selectedItemIds.length})</span>
-                      <button onClick={() => setSelectedItemIds(selectedItemIds.length === data.items.length ? [] : data.items.map(i => i.id))} className="text-[7px] font-black uppercase underline">全选</button>
+                  <div className="p-2 flex flex-col gap-4 min-h-[260px]">
+                    <div className="flex items-center justify-between px-2 pt-1">
+                      <button onClick={() => setExportSubMode('main')} className="text-gray-300 hover:text-black"><ChevronLeft size={16} /></button>
+                      <span className="text-[10px] font-mono font-black opacity-30 tracking-[0.2em]">({selectedItemIds.length} SELECTED)</span>
+                      <button onClick={() => setSelectedItemIds(selectedItemIds.length === data.items.length ? [] : data.items.map(i => i.id))} className="text-[9px] font-black uppercase underline underline-offset-4 decoration-1 opacity-40">All</button>
                     </div>
-                    <div className="grid grid-cols-2 gap-1 overflow-y-auto no-scrollbar max-h-32 py-1">
+                    <div className="grid grid-cols-3 gap-1.5 overflow-y-auto no-scrollbar max-h-40 py-1">
                       {data.items.map((item, i) => {
                         const isSelected = selectedItemIds.includes(item.id);
                         return (
-                          <button key={item.id} onClick={() => toggleItemSelection(item.id)} className={`h-8 rounded-lg font-mono font-black text-[9px] transition-all border ${isSelected ? 'bg-black border-black text-white' : 'bg-gray-50 border-gray-100 text-gray-400'}`}>
+                          <button key={item.id} onClick={() => toggleItemSelection(item.id)} className={`h-10 rounded-[12px] font-mono font-black text-[10px] transition-all border ${isSelected ? 'bg-black border-black text-white' : 'bg-black/[0.02] border-transparent text-gray-300'}`}>
                             {String(i + 1).padStart(2, '0')}
                           </button>
                         );
                       })}
                     </div>
-                    <button onClick={handleExportSelectedPreview} className="w-full bg-black text-white py-3 rounded-xl font-black text-[9px] tracking-widest uppercase flex items-center justify-center gap-1 active:scale-95 transition-transform mt-auto">
-                      导出 <ArrowRight size={8} />
+                    <button onClick={handleExportSelectedPreview} className="w-full bg-black text-white py-4 rounded-[20px] font-black text-[10px] tracking-[0.3em] uppercase flex items-center justify-center gap-2 active:scale-95 transition-transform mt-auto">
+                      Generate <ArrowRight size={10} />
                     </button>
                   </div>
                 )}
