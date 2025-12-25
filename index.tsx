@@ -103,15 +103,15 @@ const InlinePicker = ({
 }) => {
   const list = type === 'category' ? savedCategories : savedTypes;
   return (
-    <div className="absolute top-[calc(100%+20px)] left-0 z-[100] w-[320px] bg-white/90 backdrop-blur-3xl rounded-[36px] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.18)] border border-white/60 p-2.5 animate-in fade-in zoom-in slide-in-from-top-3 duration-500 origin-top-left" onClick={e => e.stopPropagation()}>
-      <div className="px-5 pt-3 pb-2.5 border-b border-black/[0.04] mb-2.5 flex justify-between items-center">
-        <span className="text-[10px] font-mono font-black tracking-[0.4em] uppercase opacity-30">{type === 'category' ? 'Category Index' : 'Art Form'}</span>
-        <div className="flex gap-1">
-          <div className="w-1 h-1 rounded-full opacity-20" style={{ backgroundColor: currentTheme.accent }}></div>
-          <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: currentTheme.accent }}></div>
+    <div className="absolute top-[calc(100%+20px)] left-0 z-[100] w-[340px] bg-white/95 backdrop-blur-3xl rounded-[32px] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.25)] border border-white/80 p-1.5 animate-in fade-in zoom-in slide-in-from-top-3 duration-500 origin-top-left" onClick={e => e.stopPropagation()}>
+      <div className="px-5 pt-4 pb-3 border-b border-black/[0.06] mb-1 flex justify-between items-center">
+        <span className="text-[18px] font-black tracking-[0.1em] opacity-40">{type === 'category' ? '分类索引' : '作品形式'}</span>
+        <div className="flex gap-1.5">
+          <div className="w-1.5 h-1.5 rounded-full opacity-20" style={{ backgroundColor: currentTheme.accent }}></div>
+          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: currentTheme.accent }}></div>
         </div>
       </div>
-      <div className="max-h-[420px] overflow-y-auto no-scrollbar py-1 space-y-1">
+      <div className="max-h-[460px] overflow-y-auto no-scrollbar py-0.5 space-y-0.5">
         {list.length > 0 ? list.map((val, i) => (
           <button 
             key={i} 
@@ -119,26 +119,26 @@ const InlinePicker = ({
               updateItemField(id, type, val);
               setActivePicker(null);
             }}
-            className={`w-full group relative flex items-center px-5 py-3.5 rounded-[24px] transition-all duration-500 ${val === currentVal ? 'bg-black/[0.05]' : 'hover:bg-black/[0.02] hover:translate-x-1.5 active:scale-[0.97]'}`}
+            className={`w-full group relative flex items-start px-5 py-4 rounded-[22px] transition-all duration-500 ${val === currentVal ? 'bg-black/[0.06]' : 'hover:bg-black/[0.03] active:scale-[0.98]'}`}
           >
-            <span className="text-[11px] font-mono font-bold opacity-10 mr-4 group-hover:opacity-30 transition-opacity w-5">{String(i + 1).padStart(2, '0')}</span>
-            <span className={`text-[30px] font-black leading-none tracking-tight truncate transition-all duration-300 ${type === 'type' ? 'italic font-serif' : ''}`} style={{ color: val === currentVal ? currentTheme.accent : 'inherit' }}>{val}</span>
+            <span className="text-[20px] font-mono font-black opacity-10 mr-5 group-hover:opacity-30 transition-opacity w-6 mt-3.5 shrink-0">{String(i + 1).padStart(2, '0')}</span>
+            <span className={`flex-1 text-[44px] font-black leading-[1.1] tracking-tighter break-all transition-all duration-300 ${type === 'type' ? 'italic font-serif' : ''}`} style={{ color: val === currentVal ? currentTheme.accent : 'inherit' }}>{val}</span>
             {val === currentVal && (
-              <div className="ml-auto w-2 h-2 rounded-full shadow-[0_0_8px] transition-all" style={{ backgroundColor: currentTheme.accent, boxShadow: `0 0 8px ${currentTheme.accent}44` }}></div>
+              <div className="ml-2 mt-5 w-3.5 h-3.5 shrink-0 rounded-full shadow-[0_0_12px] transition-all" style={{ backgroundColor: currentTheme.accent, boxShadow: `0 0 12px ${currentTheme.accent}66` }}></div>
             )}
           </button>
         )) : (
-          <div className="py-10 px-4 text-center flex flex-col items-center gap-4 animate-in fade-in duration-700">
-            <div className="w-12 h-12 rounded-full bg-black/5 flex items-center justify-center">
-              <PlusCircle size={24} className="text-black/10" />
+          <div className="py-12 px-4 text-center flex flex-col items-center gap-5 animate-in fade-in duration-700">
+            <div className="w-14 h-14 rounded-full bg-black/5 flex items-center justify-center">
+              <PlusCircle size={30} className="text-black/10" />
             </div>
-            <p className="text-[24px] font-black text-black/20 leading-none tracking-tighter italic">Library Empty</p>
-            <button onClick={() => { setActivePicker(null); setShowTagManager(true); }} className="text-[14px] font-black uppercase tracking-[0.2em] text-black/40 hover:text-black transition-colors border-b border-black/10 pb-0.5">Initialize</button>
+            <p className="text-[28px] font-black text-black/20 leading-none tracking-tighter italic">库内容为空</p>
+            <button onClick={() => { setActivePicker(null); setShowTagManager(true); }} className="text-[16px] font-black tracking-[0.1em] text-black/50 hover:text-black transition-colors border-b-2 border-black/10 pb-0.5">前往初始化</button>
           </div>
         )}
       </div>
-      <div className="mt-2.5 p-2 bg-black/[0.015] rounded-[24px] flex justify-center border-t border-black/[0.01]">
-         <Hash size={12} className="opacity-10" />
+      <div className="mt-1 p-2 bg-black/[0.02] rounded-b-[24px] flex justify-center border-t border-black/[0.02]">
+         <div className="w-12 h-1 rounded-full bg-black/5"></div>
       </div>
     </div>
   );
@@ -482,6 +482,7 @@ const App = () => {
   useEffect(() => {
     if (!canvasRef.current) return;
     const resizeObserver = new ResizeObserver(entries => {
+      if (document.activeElement?.hasAttribute('contenteditable')) return;
       for (let entry of entries) {
         setCanvasRealHeight(entry.target.scrollHeight);
       }
@@ -876,7 +877,7 @@ const App = () => {
                   className="p-2.5 bg-black/5 hover:bg-black/10 rounded-2xl transition-colors flex items-center gap-2 shrink-0"
                 >
                   <Search size={18} />
-                  <span className="text-[10px] font-black uppercase">批量</span>
+                  <span className="text-[10px] font-bold uppercase">批量</span>
                 </button>
               </div>
             ) : (
@@ -910,33 +911,33 @@ const App = () => {
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div className="w-1.5 h-6 rounded-full" style={{ backgroundColor: currentTheme.accent }}></div>
-                      <h3 className="text-[18px] font-serif font-black text-gray-800 tracking-tight">编辑概览 / ARCHIVE</h3>
+                      <h3 className="text-[18px] font-serif font-black text-gray-800 tracking-tight">编辑概览</h3>
                     </div>
                     <button onClick={() => setShowConfig(false)} className="text-gray-300 hover:text-black transition-colors"><X size={20}/></button>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <label className="text-[9px] font-mono font-black text-gray-400 uppercase tracking-[0.3em] pl-1">Project Title</label>
+                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] pl-1">项目标题</label>
                       <input value={data.mainTitle} onChange={e => updateDataField('mainTitle', e.target.value)} className="w-full bg-black/[0.03] px-5 py-4 rounded-[24px] text-xs font-serif font-black outline-none focus:bg-white border border-transparent focus:border-black/[0.05] transition-all" />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-[9px] font-mono font-black text-gray-400 uppercase tracking-[0.3em] pl-1">Author Name</label>
+                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] pl-1">作者姓名</label>
                       <input value={data.author} onChange={e => updateDataField('author', e.target.value)} className="w-full bg-black/[0.03] px-5 py-4 rounded-[24px] text-xs font-black outline-none focus:bg-white border border-transparent focus:border-black/[0.05] transition-all" />
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <label className="text-[9px] font-mono font-black text-gray-400 uppercase tracking-[0.3em] pl-1">Genre Type</label>
+                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] pl-1">总结类型</label>
                       <input value={data.summaryType} onChange={e => updateDataField('summaryType', e.target.value)} className="w-full bg-black/[0.03] px-5 py-4 rounded-[24px] text-xs font-bold outline-none focus:bg-white border border-transparent focus:border-black/[0.05] transition-all" />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-[9px] font-mono font-black text-gray-400 uppercase tracking-[0.3em] pl-1">Project Year</label>
+                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] pl-1">项目年份</label>
                       <input value={data.year} onChange={e => updateDataField('year', e.target.value)} className="w-full bg-black/[0.03] px-5 py-4 rounded-[24px] text-xs font-mono font-black outline-none focus:bg-white border border-transparent focus:border-black/[0.05] transition-all" />
                     </div>
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[9px] font-mono font-black text-gray-400 uppercase tracking-[0.3em] pl-1">Exhibition Preface</label>
-                    <textarea value={data.intro} onChange={e => updateDataField('intro', e.target.value)} className="w-full bg-black/[0.03] px-6 py-5 rounded-[30px] text-[12px] font-serif font-medium outline-none focus:bg-white border border-transparent focus:border-black/[0.05] transition-all min-h-[120px] leading-relaxed resize-none" placeholder="填写范例或总结前言..." />
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] pl-1">总结前言</label>
+                    <textarea value={data.intro} onChange={e => updateDataField('intro', e.target.value)} className="w-full bg-black/[0.03] px-6 py-5 rounded-[30px] text-[12px] font-serif font-medium outline-none focus:bg-white border border-transparent focus:border-black/[0.05] transition-all min-h-[120px] leading-relaxed resize-none" placeholder="填写总结前言或寄语..." />
                   </div>
                 </div>
               </div>
@@ -953,8 +954,8 @@ const App = () => {
                 <div className="space-y-7">
                   <div className="flex items-center justify-between">
                     <div className="flex flex-col">
-                      <h3 className="text-[20px] font-serif font-black text-gray-800 leading-none">库管理 / STORAGE</h3>
-                      <span className="text-[9px] font-mono font-bold tracking-[0.4em] uppercase opacity-30 mt-1">Tags & Categories Library</span>
+                      <h3 className="text-[22px] font-serif font-black text-gray-800 leading-none">库管理</h3>
+                      <span className="text-[11px] font-bold tracking-[0.1em] opacity-30 mt-1">标签与分类存储库</span>
                     </div>
                     <button onClick={() => setShowTagManager(false)} className="text-gray-300 hover:text-black"><X size={20} /></button>
                   </div>
@@ -962,39 +963,39 @@ const App = () => {
                   <div className="space-y-7 max-h-[440px] overflow-y-auto no-scrollbar pr-1">
                     <div className="space-y-4">
                       <div className="flex items-center justify-between pl-1">
-                        <label className="text-[10px] font-mono font-black text-black/60 uppercase tracking-[0.3em]">Categories</label>
+                        <label className="text-[13px] font-black text-black/60 uppercase tracking-[0.1em] shrink-0">全部分类</label>
                         <div className="h-[1px] flex-1 mx-4 bg-black/[0.05]"></div>
                       </div>
                       <div className="flex flex-wrap gap-2">
                         {data.savedCategories.map((cat, i) => (
-                          <div key={i} className="flex items-center gap-2 bg-black/[0.03] border border-white px-4 py-2 rounded-full text-[10px] font-black group hover:bg-black/[0.06] transition-all">
+                          <div key={i} className="flex items-center gap-2 bg-black/[0.03] border border-white px-4 py-2 rounded-full text-[13px] font-black group hover:bg-black/[0.06] transition-all break-all">
                             {cat}
-                            <button onClick={() => setData(prev => ({...prev, savedCategories: prev.savedCategories.filter(c => c !== cat)}))} className="text-gray-300 hover:text-red-500 transition-colors"><X size={12} /></button>
+                            <button onClick={() => setData(prev => ({...prev, savedCategories: prev.savedCategories.filter(c => c !== cat)}))} className="text-gray-300 hover:text-red-500 transition-colors shrink-0"><X size={14} /></button>
                           </div>
                         ))}
                       </div>
                       <div className="flex gap-2">
-                        <input value={newCatInput} onChange={e => setNewCatInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && addCategory()} placeholder="Add New..." className="flex-1 bg-black/[0.03] rounded-[20px] px-5 py-3 text-[10px] font-bold outline-none focus:bg-white border border-transparent focus:border-black/[0.05] transition-all" />
-                        <button onClick={addCategory} className="bg-black text-white w-10 h-10 flex items-center justify-center rounded-[18px] active:scale-90 transition-transform"><Plus size={16} /></button>
+                        <input value={newCatInput} onChange={e => setNewCatInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && addCategory()} placeholder="添加新分类..." className="flex-1 bg-black/[0.03] rounded-[20px] px-5 py-3 text-[12px] font-bold outline-none focus:bg-white border border-transparent focus:border-black/[0.05] transition-all" />
+                        <button onClick={addCategory} className="bg-black text-white w-10 h-10 flex items-center justify-center rounded-[18px] active:scale-90 transition-transform shrink-0"><Plus size={16} /></button>
                       </div>
                     </div>
 
                     <div className="space-y-4">
                       <div className="flex items-center justify-between pl-1">
-                        <label className="text-[10px] font-mono font-black text-black/60 uppercase tracking-[0.3em]">Format Tags</label>
+                        <label className="text-[13px] font-black text-black/60 uppercase tracking-[0.1em] shrink-0">作品标签</label>
                         <div className="h-[1px] flex-1 mx-4 bg-black/[0.05]"></div>
                       </div>
                       <div className="flex flex-wrap gap-2">
                         {data.savedTypes.map((t, i) => (
-                          <div key={i} className="flex items-center gap-2 bg-black/[0.03] border border-white px-4 py-2 rounded-full text-[10px] font-black italic group hover:bg-black/[0.06] transition-all">
+                          <div key={i} className="flex items-center gap-2 bg-black/[0.03] border border-white px-4 py-2 rounded-full text-[13px] font-black italic group hover:bg-black/[0.06] transition-all break-all">
                             {t}
-                            <button onClick={() => setData(prev => ({...prev, savedTypes: prev.savedTypes.filter(st => st !== t)}))} className="text-gray-300 hover:text-red-500 transition-colors"><X size={12} /></button>
+                            <button onClick={() => setData(prev => ({...prev, savedTypes: prev.savedTypes.filter(st => st !== t)}))} className="text-gray-300 hover:text-red-500 transition-colors shrink-0"><X size={14} /></button>
                           </div>
                         ))}
                       </div>
                       <div className="flex gap-2">
-                        <input value={newTypeInput} onChange={e => setNewTypeInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && addType()} placeholder="Add New..." className="flex-1 bg-black/[0.03] rounded-[20px] px-5 py-3 text-[10px] font-bold outline-none focus:bg-white border border-transparent focus:border-black/[0.05] transition-all" />
-                        <button onClick={addType} className="bg-black text-white w-10 h-10 flex items-center justify-center rounded-[18px] active:scale-90 transition-transform"><Plus size={16} /></button>
+                        <input value={newTypeInput} onChange={e => setNewTypeInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && addType()} placeholder="添加新标签..." className="flex-1 bg-black/[0.03] rounded-[20px] px-5 py-3 text-[12px] font-bold outline-none focus:bg-white border border-transparent focus:border-black/[0.05] transition-all" />
+                        <button onClick={addType} className="bg-black text-white w-10 h-10 flex items-center justify-center rounded-[18px] active:scale-90 transition-transform shrink-0"><Plus size={16} /></button>
                       </div>
                     </div>
                   </div>
@@ -1042,19 +1043,19 @@ const App = () => {
                   <div className="flex flex-col gap-1.5">
                     <button onClick={handleExportLong} className="flex items-center gap-3 p-4 hover:bg-black/[0.04] rounded-[22px] transition-all group border-b border-black/[0.03] pb-4">
                       <div className="w-8 h-8 rounded-full bg-black/5 flex items-center justify-center"><Layers size={16} /></div>
-                      <span className="font-black text-[11px] uppercase tracking-tight text-gray-800">完整长图</span>
+                      <span className="font-black text-[12px] uppercase tracking-tight text-gray-800">完整长图</span>
                     </button>
                     <button onClick={() => setExportSubMode('select')} className="flex items-center gap-3 p-4 hover:bg-black/[0.04] rounded-[22px] transition-all group">
                       <div className="w-8 h-8 rounded-full bg-black/5 flex items-center justify-center"><CheckSquare size={16} /></div>
-                      <span className="font-black text-[11px] uppercase tracking-tight text-gray-800">勾选导出</span>
+                      <span className="font-black text-[12px] uppercase tracking-tight text-gray-800">勾选导出</span>
                     </button>
                   </div>
                 ) : (
                   <div className="p-2 flex flex-col gap-4 min-h-[260px]">
                     <div className="flex items-center justify-between px-2 pt-1">
                       <button onClick={() => setExportSubMode('main')} className="text-gray-300 hover:text-black"><ChevronLeft size={16} /></button>
-                      <span className="text-[10px] font-mono font-black opacity-30 tracking-[0.2em]">({selectedItemIds.length} SELECTED)</span>
-                      <button onClick={() => setSelectedItemIds(selectedItemIds.length === data.items.length ? [] : data.items.map(i => i.id))} className="text-[9px] font-black uppercase underline underline-offset-4 decoration-1 opacity-40">All</button>
+                      <span className="text-[11px] font-black opacity-30 tracking-[0.1em]">(已选 {selectedItemIds.length})</span>
+                      <button onClick={() => setSelectedItemIds(selectedItemIds.length === data.items.length ? [] : data.items.map(i => i.id))} className="text-[10px] font-black uppercase underline underline-offset-4 decoration-1 opacity-40">全选</button>
                     </div>
                     <div className="grid grid-cols-3 gap-1.5 overflow-y-auto no-scrollbar max-h-40 py-1">
                       {data.items.map((item, i) => {
@@ -1066,8 +1067,8 @@ const App = () => {
                         );
                       })}
                     </div>
-                    <button onClick={handleExportSelectedPreview} className="w-full bg-black text-white py-4 rounded-[20px] font-black text-[10px] tracking-[0.3em] uppercase flex items-center justify-center gap-2 active:scale-95 transition-transform mt-auto">
-                      Generate <ArrowRight size={10} />
+                    <button onClick={handleExportSelectedPreview} className="w-full bg-black text-white py-4 rounded-[20px] font-black text-[11px] tracking-[0.2em] uppercase flex items-center justify-center gap-2 active:scale-95 transition-transform mt-auto">
+                      生成预览 <ArrowRight size={10} />
                     </button>
                   </div>
                 )}
