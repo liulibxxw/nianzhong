@@ -77,7 +77,7 @@ const COLOR_PRESETS = [
   '#000000', '#C53030', '#3E6B5D', '#2B6CB0', '#D4A373', '#718096', '#9B2C2C', '#FFFFFF'
 ];
 
-const TEXTURE_URL = `url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAMAAAAp4XiDAAAAUVBMVEWFhYWDg4N3dyZlZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZiZ6Np9LAAAAFnRSTlMAp79vj6uXm59/f39/f39/f39/f39/f398C9mBAAAAelURBVDjL7ZFBCsAwDMNisv//766mS7vtoYORXAiBhC8m8mIyLybyYiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJi8m/mBfNNCFmS0XyXAAAAAElFTkSuQmCC")`;
+const TEXTURE_URL = `url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAMAAAAp4XiDAAAAUVBMVEWFhYWDg4N3dyZlZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZiZ6Np9LAAAAFnRSTlMAp79vj6uXm59/f39/f39/f39/f39/f398C9mBAAAAelURBVDjL7ZFBCsAwDMNisv//766mS7vtoYORXAiBhC8m8mIyLybyYiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJi8m/mBfNNCFmS0XyXAAAAAElFTkSuQmCC")`;
 
 const DEFAULT_TEXT = '';
 const GET_CURRENT_DATE = () => new Date().getFullYear().toString();
@@ -236,6 +236,7 @@ const SummaryCanvas = ({
                   {data.author}
                 </span>
               </div>
+              <div className="flex-1 flex-col gap-8 mt-2 relative hidden"> {/* Reserved for layout consistency if needed */} </div>
               <div className="flex-1 flex flex-col gap-8 mt-2 relative">
                 <div className="flex items-center gap-6">
                   <div className="h-[3px] flex-1 rounded-full opacity-40" style={{ background: `linear-gradient(to right, ${currentTheme.accent}, transparent)` }}></div>
@@ -364,7 +365,7 @@ const SummaryCanvas = ({
                 {item.contents.map((c, idx) => (
                   <React.Fragment key={idx}>
                     {item.contents.length > 1 && (
-                      <div className={`${idx === 0 ? 'mt-12 mb-20' : 'my-28'} relative flex items-center justify-start pr-20 group/divider`}>
+                      <div className={`${idx === 0 ? 'mt-14 mb-4' : 'mt-20 mb-10'} relative flex items-center justify-start pr-20 group/divider`}>
                         {/* 左侧加粗竖向装饰色块 */}
                         <div className="w-1.5 h-32 shrink-0 rounded-full" style={{ backgroundColor: currentTheme.accent }}></div>
                         
@@ -506,7 +507,7 @@ const App = () => {
       summaryType: '彩云易散琉璃脆',
       themeId: 'rose',
       savedCategories: ['文稿'],
-      savedTypes: ['游戏掉落鉴', '段子体', '人生四格', '常稿', '短打', '猫塑', '黄油鉴'],
+      savedTypes: ['游戏掉落鉴', '段子体', '人生四格', '常稿', '短打', '猫塑', '黄油鉴', '结局鉴'],
       items: [
         {
           id: 'init-1',
@@ -998,7 +999,7 @@ const App = () => {
                   <div className="flex items-center justify-between"><h3 className="text-[15px] font-serif font-black text-gray-800">库管理</h3><button onClick={() => setShowTagManager(false)} className="text-gray-300 hover:text-black"><X size={16} /></button></div>
                   <div className="space-y-5 max-h-[360px] overflow-y-auto no-scrollbar pr-1">
                     <div className="space-y-2.5"><label className="text-[10px] font-black text-black/40 uppercase tracking-widest pl-1">分类存储</label><div className="flex flex-wrap gap-2">{data.savedCategories.map((cat, i) => (<div key={i} className="flex items-center gap-1.5 bg-black/[0.02] border border-black/5 px-3 py-1.5 rounded-full text-[11px] font-black">{cat}<button onClick={() => setData(prev => ({...prev, savedCategories: prev.savedCategories.filter(c => c !== cat)}))} className="text-gray-300 hover:text-red-500"><X size={12} /></button></div>)) }</div><div className="flex gap-2 pt-1"><input value={newCatInput} onChange={e => setNewCatInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && addCategory()} placeholder="新分类" className="flex-1 bg-black/[0.03] rounded-[12px] px-3 py-2 text-[11px] font-bold outline-none" /><button onClick={addCategory} className="bg-black text-white w-9 h-9 flex items-center justify-center rounded-[12px]"><Plus size={16} /></button></div></div>
-                    <div className="space-y-2.5"><label className="text-[10px] font-black text-black/40 uppercase tracking-widest pl-1">形式标签</label><div className="flex flex-wrap gap-2">{data.savedTypes.map((t, i) => (<div key={i} className="flex items-center gap-1.5 bg-black/[0.02] border border-black/5 px-3 py-1.5 rounded-full text-[11px] font-black italic">{t}<button onClick={() => setData(prev => ({...prev, savedTypes: prev.savedTypes.filter(st => st !== t)}))} className="text-gray-300 hover:text-red-500"><X size={12} /></button></div>))}</div><div className="flex gap-2 pt-1"><input value={newTypeInput} onChange={e => setNewTypeInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && addType()} placeholder="新形式" className="flex-1 bg-black/[0.03] rounded-[12px] px-3 py-2 text-[11px] font-bold outline-none" /><button onClick={addType} className="bg-black text-white w-9 h-9 flex items-center justify-center rounded-[12px]"><Plus size={16} /></button></div></div>
+                    <div className="space-y-2.5"><label className="text-[10px] font-black text-black/40 uppercase tracking-widest pl-1">形式标签</label><div className="flex flex-wrap gap-2">{data.savedTypes.map((t, i) => (<div key={i} className="flex items-center gap-1.5 bg-black/[0.02] border border-black/5 px-3 py-1.5 rounded-full text-[11px] font-black italic">{t}<button onClick={() => setData(prev => ({...prev, savedTypes: prev.savedTypes.filter(st => t !== st)}))} className="text-gray-300 hover:text-red-500"><X size={12} /></button></div>))}</div><div className="flex gap-2 pt-1"><input value={newTypeInput} onChange={e => setNewTypeInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && addType()} placeholder="新形式" className="flex-1 bg-black/[0.03] rounded-[12px] px-3 py-2 text-[11px] font-bold outline-none" /><button onClick={addType} className="bg-black text-white w-9 h-9 flex items-center justify-center rounded-[12px]"><Plus size={16} /></button></div></div>
                   </div>
                 </div>
               </div>
