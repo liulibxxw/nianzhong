@@ -75,7 +75,7 @@ const COLOR_PRESETS = [
   '#000000', '#C53030', '#3E6B5D', '#2B6CB0', '#D4A373', '#718096', '#9B2C2C', '#FFFFFF'
 ];
 
-const TEXTURE_URL = `url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAMAAAAp4XiDAAAAUVBMVEWFhYWDg4N3dyZlZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZiZ6Np9LAAAAFnRSTlMAp79vj6uXm59/f39/f39/f39/f39/f398C9mBAAAAelURBVDjL7ZFBCsAwDMNisv//766mS7vtoYORXAiBhC8m8mIyLybyYiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJi8m/mBfNNCFmS0XyXAAAAAElFTkSuQmCC")`;
+const TEXTURE_URL = `url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAMAAAAp4XiDAAAAUVBMVEWFhYWDg4N3dyZlZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZiZ6Np9LAAAAFnRSTlMAp79vj6uXm59/f39/f39/f39/f39/f398C9mBAAAAelURBVDjL7ZFBCsAwDMNisv//766mS7vtoYORXAiBhC8m8mIyLybyYiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJi8m/mBfNNCFmS0XyXAAAAAElFTkSuQmCC")`;
 
 const DEFAULT_TEXT = '';
 const GET_CURRENT_DATE = () => new Date().toISOString().split('T')[0].replace(/-/g, '.');
@@ -103,7 +103,7 @@ const InlinePicker = ({
 }) => {
   const list = type === 'category' ? savedCategories : savedTypes;
   return (
-    <div className="absolute top-[calc(100%+20px)] left-0 z-[100] w-[340px] bg-white/95 backdrop-blur-3xl rounded-[32px] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.25)] border border-white/80 p-1.5 animate-in fade-in zoom-in slide-in-from-top-3 duration-500 origin-top-left" onClick={e => e.stopPropagation()}>
+    <div className="absolute top-[calc(100%+20px)] left-0 z-[100] w-[540px] bg-white/95 backdrop-blur-3xl rounded-[32px] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.25)] border border-white/80 p-4 animate-in fade-in zoom-in slide-in-from-top-3 duration-500 origin-top-left" onClick={e => e.stopPropagation()}>
       <div className="px-5 pt-4 pb-3 border-b border-black/[0.06] mb-1 flex justify-between items-center">
         <span className="text-[18px] font-black tracking-[0.1em] opacity-40">{type === 'category' ? '分类索引' : '作品形式'}</span>
         <div className="flex gap-1.5">
@@ -906,38 +906,38 @@ const App = () => {
         <footer className="h-14 flex items-center justify-around px-4 safe-area-bottom shrink-0">
           <div className="relative">
             {showConfig && (
-              <div className="absolute bottom-[110%] left-[0px] mb-5 w-[calc(100vw-32px)] max-w-[340px] bg-white/85 backdrop-blur-3xl rounded-[40px] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.3)] border border-white/60 p-7 animate-in slide-in-from-bottom-3 fade-in duration-500 z-[300]" onClick={e => e.stopPropagation()}>
-                <div className="space-y-5">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-1.5 h-6 rounded-full" style={{ backgroundColor: currentTheme.accent }}></div>
-                      <h3 className="text-[18px] font-serif font-black text-gray-800 tracking-tight">编辑概览</h3>
+              <div className="absolute bottom-[110%] left-[0px] mb-5 w-[calc(100vw-32px)] max-w-[270px] bg-white/85 backdrop-blur-3xl rounded-[40px] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.3)] border border-white/60 p-4 animate-in slide-in-from-bottom-3 fade-in duration-500 z-[300]" onClick={e => e.stopPropagation()}>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-1 h-5 rounded-full" style={{ backgroundColor: currentTheme.accent }}></div>
+                      <h3 className="text-[15px] font-serif font-black text-gray-800 tracking-tight">编辑概览</h3>
                     </div>
-                    <button onClick={() => setShowConfig(false)} className="text-gray-300 hover:text-black transition-colors"><X size={20}/></button>
+                    <button onClick={() => setShowConfig(false)} className="text-gray-300 hover:text-black transition-colors"><X size={18}/></button>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] pl-1">项目标题</label>
-                      <input value={data.mainTitle} onChange={e => updateDataField('mainTitle', e.target.value)} className="w-full bg-black/[0.03] px-5 py-4 rounded-[24px] text-xs font-serif font-black outline-none focus:bg-white border border-transparent focus:border-black/[0.05] transition-all" />
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] pl-1">项目标题</label>
+                      <input value={data.mainTitle} onChange={e => updateDataField('mainTitle', e.target.value)} className="w-full bg-black/[0.03] px-4 py-2 rounded-[16px] text-[10px] font-serif font-black outline-none focus:bg-white border border-transparent focus:border-black/[0.05] transition-all" />
                     </div>
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] pl-1">作者姓名</label>
-                      <input value={data.author} onChange={e => updateDataField('author', e.target.value)} className="w-full bg-black/[0.03] px-5 py-4 rounded-[24px] text-xs font-black outline-none focus:bg-white border border-transparent focus:border-black/[0.05] transition-all" />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] pl-1">总结类型</label>
-                      <input value={data.summaryType} onChange={e => updateDataField('summaryType', e.target.value)} className="w-full bg-black/[0.03] px-5 py-4 rounded-[24px] text-xs font-bold outline-none focus:bg-white border border-transparent focus:border-black/[0.05] transition-all" />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] pl-1">项目年份</label>
-                      <input value={data.year} onChange={e => updateDataField('year', e.target.value)} className="w-full bg-black/[0.03] px-5 py-4 rounded-[24px] text-xs font-mono font-black outline-none focus:bg-white border border-transparent focus:border-black/[0.05] transition-all" />
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] pl-1">作者姓名</label>
+                      <input value={data.author} onChange={e => updateDataField('author', e.target.value)} className="w-full bg-black/[0.03] px-4 py-2 rounded-[16px] text-[10px] font-black outline-none focus:bg-white border border-transparent focus:border-black/[0.05] transition-all" />
                     </div>
                   </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] pl-1">总结前言</label>
-                    <textarea value={data.intro} onChange={e => updateDataField('intro', e.target.value)} className="w-full bg-black/[0.03] px-6 py-5 rounded-[30px] text-[12px] font-serif font-medium outline-none focus:bg-white border border-transparent focus:border-black/[0.05] transition-all min-h-[120px] leading-relaxed resize-none" placeholder="填写总结前言或寄语..." />
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] pl-1">总结类型</label>
+                      <input value={data.summaryType} onChange={e => updateDataField('summaryType', e.target.value)} className="w-full bg-black/[0.03] px-4 py-2 rounded-[16px] text-[10px] font-bold outline-none focus:bg-white border border-transparent focus:border-black/[0.05] transition-all" />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] pl-1">项目年份</label>
+                      <input value={data.year} onChange={e => updateDataField('year', e.target.value)} className="w-full bg-black/[0.03] px-4 py-2 rounded-[16px] text-[10px] font-mono font-black outline-none focus:bg-white border border-transparent focus:border-black/[0.05] transition-all" />
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] pl-1">总结前言</label>
+                    <textarea value={data.intro} onChange={e => updateDataField('intro', e.target.value)} className="w-full bg-black/[0.03] px-4 py-3 rounded-[20px] text-[10px] font-serif font-medium outline-none focus:bg-white border border-transparent focus:border-black/[0.05] transition-all min-h-[80px] leading-relaxed resize-none" placeholder="填写总结前言或寄语..." />
                   </div>
                 </div>
               </div>
@@ -950,52 +950,52 @@ const App = () => {
 
           <div className="relative">
             {showTagManager && (
-              <div className="absolute bottom-[110%] left-[-40px] mb-5 w-[calc(100vw-32px)] max-w-[360px] bg-white/85 backdrop-blur-3xl rounded-[40px] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.3)] border border-white/60 p-8 animate-in slide-in-from-bottom-3 fade-in duration-500 z-[300]" onClick={e => e.stopPropagation()}>
-                <div className="space-y-7">
+              <div className="absolute bottom-[110%] left-[-40px] mb-5 w-[calc(100vw-32px)] max-w-[290px] bg-white/85 backdrop-blur-3xl rounded-[40px] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.3)] border border-white/60 p-4 animate-in slide-in-from-bottom-3 fade-in duration-500 z-[300]" onClick={e => e.stopPropagation()}>
+                <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="flex flex-col">
-                      <h3 className="text-[22px] font-serif font-black text-gray-800 leading-none">库管理</h3>
-                      <span className="text-[11px] font-bold tracking-[0.1em] opacity-30 mt-1">标签与分类存储库</span>
+                      <h3 className="text-[18px] font-serif font-black text-gray-800 leading-none">库管理</h3>
+                      <span className="text-[10px] font-bold tracking-[0.1em] opacity-30 mt-1">标签与分类存储库</span>
                     </div>
-                    <button onClick={() => setShowTagManager(false)} className="text-gray-300 hover:text-black"><X size={20} /></button>
+                    <button onClick={() => setShowTagManager(false)} className="text-gray-300 hover:text-black"><X size={18} /></button>
                   </div>
                   
-                  <div className="space-y-7 max-h-[440px] overflow-y-auto no-scrollbar pr-1">
-                    <div className="space-y-4">
+                  <div className="space-y-4 max-h-[360px] overflow-y-auto no-scrollbar pr-1">
+                    <div className="space-y-3">
                       <div className="flex items-center justify-between pl-1">
-                        <label className="text-[13px] font-black text-black/60 uppercase tracking-[0.1em] shrink-0">全部分类</label>
+                        <label className="text-[11px] font-black text-black/60 uppercase tracking-[0.1em] shrink-0">全部分类</label>
                         <div className="h-[1px] flex-1 mx-4 bg-black/[0.05]"></div>
                       </div>
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-wrap gap-1.5">
                         {data.savedCategories.map((cat, i) => (
-                          <div key={i} className="flex items-center gap-2 bg-black/[0.03] border border-white px-4 py-2 rounded-full text-[13px] font-black group hover:bg-black/[0.06] transition-all break-all">
+                          <div key={i} className="flex items-center gap-1.5 bg-black/[0.03] border border-white px-3 py-1.5 rounded-full text-[11px] font-black group hover:bg-black/[0.06] transition-all break-all">
                             {cat}
-                            <button onClick={() => setData(prev => ({...prev, savedCategories: prev.savedCategories.filter(c => c !== cat)}))} className="text-gray-300 hover:text-red-500 transition-colors shrink-0"><X size={14} /></button>
+                            <button onClick={() => setData(prev => ({...prev, savedCategories: prev.savedCategories.filter(c => c !== cat)}))} className="text-gray-300 hover:text-red-500 transition-colors shrink-0"><X size={12} /></button>
                           </div>
                         ))}
                       </div>
-                      <div className="flex gap-2">
-                        <input value={newCatInput} onChange={e => setNewCatInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && addCategory()} placeholder="添加新分类..." className="flex-1 bg-black/[0.03] rounded-[20px] px-5 py-3 text-[12px] font-bold outline-none focus:bg-white border border-transparent focus:border-black/[0.05] transition-all" />
-                        <button onClick={addCategory} className="bg-black text-white w-10 h-10 flex items-center justify-center rounded-[18px] active:scale-90 transition-transform shrink-0"><Plus size={16} /></button>
+                      <div className="flex gap-1.5">
+                        <input value={newCatInput} onChange={e => setNewCatInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && addCategory()} placeholder="新分类..." className="flex-1 bg-black/[0.03] rounded-[14px] px-3 py-2 text-[10px] font-bold outline-none focus:bg-white border border-transparent focus:border-black/[0.05] transition-all" />
+                        <button onClick={addCategory} className="bg-black text-white w-8 h-8 flex items-center justify-center rounded-[12px] active:scale-90 transition-transform shrink-0"><Plus size={14} /></button>
                       </div>
                     </div>
 
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                       <div className="flex items-center justify-between pl-1">
-                        <label className="text-[13px] font-black text-black/60 uppercase tracking-[0.1em] shrink-0">作品标签</label>
+                        <label className="text-[11px] font-black text-black/60 uppercase tracking-[0.1em] shrink-0">作品标签</label>
                         <div className="h-[1px] flex-1 mx-4 bg-black/[0.05]"></div>
                       </div>
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-wrap gap-1.5">
                         {data.savedTypes.map((t, i) => (
-                          <div key={i} className="flex items-center gap-2 bg-black/[0.03] border border-white px-4 py-2 rounded-full text-[13px] font-black italic group hover:bg-black/[0.06] transition-all break-all">
+                          <div key={i} className="flex items-center gap-1.5 bg-black/[0.03] border border-white px-3 py-1.5 rounded-full text-[11px] font-black italic group hover:bg-black/[0.06] transition-all break-all">
                             {t}
-                            <button onClick={() => setData(prev => ({...prev, savedTypes: prev.savedTypes.filter(st => st !== t)}))} className="text-gray-300 hover:text-red-500 transition-colors shrink-0"><X size={14} /></button>
+                            <button onClick={() => setData(prev => ({...prev, savedTypes: prev.savedTypes.filter(st => st !== t)}))} className="text-gray-300 hover:text-red-500 transition-colors shrink-0"><X size={12} /></button>
                           </div>
                         ))}
                       </div>
-                      <div className="flex gap-2">
-                        <input value={newTypeInput} onChange={e => setNewTypeInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && addType()} placeholder="添加新标签..." className="flex-1 bg-black/[0.03] rounded-[20px] px-5 py-3 text-[12px] font-bold outline-none focus:bg-white border border-transparent focus:border-black/[0.05] transition-all" />
-                        <button onClick={addType} className="bg-black text-white w-10 h-10 flex items-center justify-center rounded-[18px] active:scale-90 transition-transform shrink-0"><Plus size={16} /></button>
+                      <div className="flex gap-1.5">
+                        <input value={newTypeInput} onChange={e => setNewTypeInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && addType()} placeholder="新标签..." className="flex-1 bg-black/[0.03] rounded-[14px] px-3 py-2 text-[10px] font-bold outline-none focus:bg-white border border-transparent focus:border-black/[0.05] transition-all" />
+                        <button onClick={addType} className="bg-black text-white w-8 h-8 flex items-center justify-center rounded-[12px] active:scale-90 transition-transform shrink-0"><Plus size={14} /></button>
                       </div>
                     </div>
                   </div>
@@ -1014,17 +1014,17 @@ const App = () => {
 
           <div className="relative">
             {showThemePicker && (
-              <div className="absolute bottom-[110%] left-1/2 -translate-x-1/2 mb-5 w-[180px] bg-white/85 backdrop-blur-3xl rounded-[32px] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.3)] border border-white/60 p-2.5 animate-in slide-in-from-bottom-3 fade-in duration-500 z-[300]" onClick={e => e.stopPropagation()}>
-                <div className="flex flex-col gap-1.5">
+              <div className="absolute bottom-[110%] left-1/2 -translate-x-1/2 mb-5 w-[140px] bg-white/85 backdrop-blur-3xl rounded-[32px] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.3)] border border-white/60 p-2 animate-in slide-in-from-bottom-3 fade-in duration-500 z-[300]" onClick={e => e.stopPropagation()}>
+                <div className="flex flex-col gap-1">
                   {THEMES.map(t => (
                     <button 
                       key={t.id} 
                       onClick={() => { setData({...data, themeId: t.id}); setShowThemePicker(false); }} 
-                      className={`flex items-center gap-3.5 p-3.5 rounded-[22px] transition-all ${data.themeId === t.id ? 'bg-black/[0.05]' : 'hover:bg-black/[0.02]'}`}
+                      className={`flex items-center gap-2.5 p-2 rounded-[16px] transition-all ${data.themeId === t.id ? 'bg-black/[0.05]' : 'hover:bg-black/[0.02]'}`}
                     >
-                      <div className="w-6 h-6 rounded-full border border-black/5 shadow-inner transition-transform group-hover:scale-110" style={{ backgroundColor: t.accent }}></div>
-                      <span className={`text-[12px] font-black tracking-tight ${data.themeId === t.id ? 'text-black' : 'text-gray-400'}`}>{t.name}</span>
-                      {data.themeId === t.id && <Check size={14} className="ml-auto opacity-40" />}
+                      <div className="w-5 h-5 rounded-full border border-black/5 shadow-inner transition-transform group-hover:scale-110" style={{ backgroundColor: t.accent }}></div>
+                      <span className={`text-[10px] font-black tracking-tight ${data.themeId === t.id ? 'text-black' : 'text-gray-400'}`}>{t.name}</span>
+                      {data.themeId === t.id && <Check size={12} className="ml-auto opacity-40" />}
                     </button>
                   ))}
                 </div>
@@ -1038,36 +1038,36 @@ const App = () => {
           
           <div className="relative">
             {showExportMenu && (
-              <div className="absolute bottom-[110%] right-[0px] mb-5 w-[160px] bg-white/85 backdrop-blur-3xl rounded-[32px] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.3)] border border-white/60 p-2.5 animate-in slide-in-from-bottom-3 fade-in duration-500 z-[300]" onClick={e => e.stopPropagation()}>
+              <div className="absolute bottom-[110%] right-[0px] mb-5 w-[130px] bg-white/85 backdrop-blur-3xl rounded-[32px] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.3)] border border-white/60 p-2 animate-in slide-in-from-bottom-3 fade-in duration-500 z-[300]" onClick={e => e.stopPropagation()}>
                 {exportSubMode === 'main' ? (
-                  <div className="flex flex-col gap-1.5">
-                    <button onClick={handleExportLong} className="flex items-center gap-3 p-4 hover:bg-black/[0.04] rounded-[22px] transition-all group border-b border-black/[0.03] pb-4">
-                      <div className="w-8 h-8 rounded-full bg-black/5 flex items-center justify-center"><Layers size={16} /></div>
-                      <span className="font-black text-[12px] uppercase tracking-tight text-gray-800">完整长图</span>
+                  <div className="flex flex-col gap-1">
+                    <button onClick={handleExportLong} className="flex items-center gap-2 p-2.5 hover:bg-black/[0.04] rounded-[16px] transition-all group border-b border-black/[0.03] pb-2.5">
+                      <div className="w-6 h-6 rounded-full bg-black/5 flex items-center justify-center"><Layers size={14} /></div>
+                      <span className="font-black text-[10px] uppercase tracking-tight text-gray-800">完整长图</span>
                     </button>
-                    <button onClick={() => setExportSubMode('select')} className="flex items-center gap-3 p-4 hover:bg-black/[0.04] rounded-[22px] transition-all group">
-                      <div className="w-8 h-8 rounded-full bg-black/5 flex items-center justify-center"><CheckSquare size={16} /></div>
-                      <span className="font-black text-[12px] uppercase tracking-tight text-gray-800">勾选导出</span>
+                    <button onClick={() => setExportSubMode('select')} className="flex items-center gap-2.5 p-2.5 hover:bg-black/[0.04] rounded-[16px] transition-all group">
+                      <div className="w-6 h-6 rounded-full bg-black/5 flex items-center justify-center"><CheckSquare size={14} /></div>
+                      <span className="font-black text-[10px] uppercase tracking-tight text-gray-800">勾选导出</span>
                     </button>
                   </div>
                 ) : (
-                  <div className="p-2 flex flex-col gap-4 min-h-[260px]">
-                    <div className="flex items-center justify-between px-2 pt-1">
-                      <button onClick={() => setExportSubMode('main')} className="text-gray-300 hover:text-black"><ChevronLeft size={16} /></button>
-                      <span className="text-[11px] font-black opacity-30 tracking-[0.1em]">(已选 {selectedItemIds.length})</span>
-                      <button onClick={() => setSelectedItemIds(selectedItemIds.length === data.items.length ? [] : data.items.map(i => i.id))} className="text-[10px] font-black uppercase underline underline-offset-4 decoration-1 opacity-40">全选</button>
+                  <div className="p-1 flex flex-col gap-2.5 min-h-[200px]">
+                    <div className="flex items-center justify-between px-1 pt-1">
+                      <button onClick={() => setExportSubMode('main')} className="text-gray-300 hover:text-black"><ChevronLeft size={14} /></button>
+                      <span className="text-[9px] font-black opacity-30 tracking-[0.1em]">(已选 {selectedItemIds.length})</span>
+                      <button onClick={() => setSelectedItemIds(selectedItemIds.length === data.items.length ? [] : data.items.map(i => i.id))} className="text-[8px] font-black uppercase underline underline-offset-4 decoration-1 opacity-40">全选</button>
                     </div>
-                    <div className="grid grid-cols-3 gap-1.5 overflow-y-auto no-scrollbar max-h-40 py-1">
+                    <div className="grid grid-cols-3 gap-1 overflow-y-auto no-scrollbar max-h-28 py-1">
                       {data.items.map((item, i) => {
                         const isSelected = selectedItemIds.includes(item.id);
                         return (
-                          <button key={item.id} onClick={() => toggleItemSelection(item.id)} className={`h-10 rounded-[12px] font-mono font-black text-[10px] transition-all border ${isSelected ? 'bg-black border-black text-white' : 'bg-black/[0.02] border-transparent text-gray-300'}`}>
+                          <button key={item.id} onClick={() => toggleItemSelection(item.id)} className={`h-7 rounded-[8px] font-mono font-black text-[8px] transition-all border ${isSelected ? 'bg-black border-black text-white' : 'bg-black/[0.02] border-transparent text-gray-300'}`}>
                             {String(i + 1).padStart(2, '0')}
                           </button>
                         );
                       })}
                     </div>
-                    <button onClick={handleExportSelectedPreview} className="w-full bg-black text-white py-4 rounded-[20px] font-black text-[11px] tracking-[0.2em] uppercase flex items-center justify-center gap-2 active:scale-95 transition-transform mt-auto">
+                    <button onClick={handleExportSelectedPreview} className="w-full bg-black text-white py-2.5 rounded-[12px] font-black text-[9px] tracking-[0.2em] uppercase flex items-center justify-center gap-1 active:scale-95 transition-transform mt-auto">
                       生成预览 <ArrowRight size={10} />
                     </button>
                   </div>
