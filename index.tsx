@@ -29,7 +29,9 @@ import {
   Tags,
   Layout,
   PlusSquare,
-  MinusSquare
+  MinusSquare,
+  Navigation,
+  ArrowDown
 } from 'lucide-react';
 import * as htmlToImage from 'html-to-image';
 
@@ -39,6 +41,7 @@ interface SummaryItem {
   date: string;
   category: string;
   type: string;
+  mainContent: string; 
   contents: string[];
   thoughts: string;
 }
@@ -51,6 +54,13 @@ interface SummaryData {
   summaryType: string;
   wordCount: string;
   themeId: string;
+  customColors: {
+    bg: string;
+    accent: string;
+    text: string;
+    secondary: string;
+    card: string;
+  };
   savedCategories: string[];
   savedTypes: string[];
   items: SummaryItem[];
@@ -70,26 +80,25 @@ const THEMES: ThemeConfig[] = [
   { id: 'rose', name: '落霞红', bg: '#FFF5F5', accent: '#C53030', text: '#2D3748', secondary: '#9B2C2C', card: 'rgba(255,255,255,0.5)' },
   { id: 'ivory', name: '象牙白', bg: '#F7F4F0', accent: '#3E6B5D', text: '#1A1A1A', secondary: '#8C8276', card: 'rgba(255,255,255,0.5)' },
   { id: 'midnight', name: '暗夜金', bg: '#111111', accent: '#D4A373', text: '#FFFFFF', secondary: '#666666', card: 'rgba(255,255,255,0.05)' },
-  { id: 'azure', name: '远洋蓝', bg: '#EBF4FF', accent: '#2B6CB0', text: '#1A202C', secondary: '#718096', card: 'rgba(255,255,255,0.6)' }
+  { id: 'azure', name: '远洋蓝', bg: '#EBF4FF', accent: '#2B6CB0', text: '#1A202C', secondary: '#718096', card: 'rgba(255,255,255,0.6)' },
+  { id: 'custom', name: '自定义', bg: '#F8F8F8', accent: '#000000', text: '#1A1A1A', secondary: '#666666', card: 'rgba(255,255,255,0.8)' }
 ];
 
 const COLOR_PRESETS = [
   '#000000', '#C53030', '#3E6B5D', '#2B6CB0', '#D4A373', '#718096', '#9B2C2C', '#FFFFFF'
 ];
 
-const TEXTURE_URL = `url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAMAAAAp4XiDAAAAUVBMVEWFhYWDg4N3dyZlZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZiZ6Np9LAAAAFnRSTlMAp79vj6uXm59/f39/f39/f39/f39/f398C9mBAAAAelURBVDjL7ZFBCsAwDMNisv//766mS7vtoYORXAiBhC8m8mIyLybyYiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJi8m/mBfNNCFmS0XyXAAAAAElFTkSuQmCC")`;
+const TEXTURE_URL = `url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAMAAAAp4XiDAAAAUVBMVEWFhYWDg4N3dyZlZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZidmZiZ6Np9LAAAAFnRSTlMAp79vj6uXm59/f39/f39/f39/f39/f398C9mBAAAAelURBVDjL7ZFBCsAwDMNisv//766mS7vtoYORXAiBhC8m8mIyLybyYiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJiIvJvJi8m/mBfNNCFmS0XyXAAAAAElFTkSuQmCC")`;
 
 const DEFAULT_TEXT = '';
 const GET_CURRENT_DATE = () => new Date().getFullYear().toString();
 const STORAGE_KEY = 'year_end_summary_app_v2';
 
-// 新增：解决光标问题的组件
-const EditableArea = ({ html, onChange, className, tag: Tag = 'div', isExport = false, onPaste, ...props }: any) => {
+const EditableArea = ({ html, onChange, placeholder, className, tag: Tag = 'div', isExport = false, onPaste, ...props }: any) => {
   const elRef = useRef<HTMLElement>(null);
   const isInitialMount = useRef(true);
 
   useEffect(() => {
-    // 仅在初始挂载或当前元素没有焦点时更新 innerHTML，防止 React 重新协调导致的丢焦点
     if (elRef.current && (isInitialMount.current || document.activeElement !== elRef.current)) {
       elRef.current.innerHTML = html || '';
       isInitialMount.current = false;
@@ -97,7 +106,7 @@ const EditableArea = ({ html, onChange, className, tag: Tag = 'div', isExport = 
   }, [html]);
 
   if (isExport) {
-    return <Tag className={className} dangerouslySetInnerHTML={{ __html: html }} {...props} />;
+    return <Tag className={className} dangerouslySetInnerHTML={{ __html: html || '' }} {...props} />;
   }
 
   return (
@@ -105,6 +114,7 @@ const EditableArea = ({ html, onChange, className, tag: Tag = 'div', isExport = 
       ref={elRef as any}
       contentEditable={true}
       suppressContentEditableWarning
+      data-placeholder={placeholder}
       className={`${className} outline-none`}
       onInput={(e: React.FormEvent<HTMLElement>) => onChange(e.currentTarget.innerHTML)}
       onPaste={onPaste}
@@ -199,7 +209,7 @@ const SummaryCanvas = ({
   isExport?: boolean,
   canvasRef?: React.RefObject<HTMLDivElement | null>,
   exportContainerRef?: React.RefObject<HTMLDivElement | null>,
-  updateDataField: (field: keyof Omit<SummaryData, 'items' | 'savedCategories' | 'savedTypes'>, value: string) => void,
+  updateDataField: (field: keyof Omit<SummaryData, 'items' | 'savedCategories' | 'savedTypes' | 'customColors'>, value: string) => void,
   updateItemField: (id: string, field: keyof SummaryItem, value: any) => void,
   removeItem: (id: string, e: React.MouseEvent) => void,
   activePicker: {id: string, type: 'category' | 'type'} | null,
@@ -230,6 +240,7 @@ const SummaryCanvas = ({
             tag="span"
             isExport={isExport} 
             html={data.summaryType}
+            placeholder="总结类别"
             onChange={(val: string) => updateDataField('summaryType', val)}
             className="font-serif text-[32px] tracking-[0.2em] font-black min-w-[200px]"
           />
@@ -257,6 +268,7 @@ const SummaryCanvas = ({
                   tag="h1"
                   isExport={isExport}
                   html={data.mainTitle}
+                  placeholder="键入一个标题"
                   onChange={(val: string) => updateDataField('mainTitle', val)}
                   className="text-[170px] font-serif font-black leading-[1.1] tracking-tighter relative min-h-[1em] inline-block"
                   style={{ backgroundImage: `linear-gradient(to right, ${currentTheme.text} 55%, ${currentTheme.accent} 55%)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}
@@ -275,12 +287,12 @@ const SummaryCanvas = ({
                   tag="span"
                   isExport={isExport}
                   html={data.author}
+                  placeholder="署名作者"
                   onChange={(val: string) => updateDataField('author', val)}
                   className="text-[56px] font-serif font-black tracking-widest underline decoration-[8px] underline-offset-[16px] w-fit min-w-[100px]"
                   style={{ textDecorationColor: currentTheme.accent }}
                 />
               </div>
-              <div className="flex-1 flex-col gap-8 mt-2 relative hidden"> {/* Reserved for layout consistency if needed */} </div>
               <div className="flex-1 flex flex-col gap-8 mt-2 relative">
                 <div className="flex items-center gap-6">
                   <div className="h-[3px] flex-1 rounded-full opacity-40" style={{ background: `linear-gradient(to right, ${currentTheme.accent}, transparent)` }}></div>
@@ -315,6 +327,7 @@ const SummaryCanvas = ({
                       <EditableArea 
                         isExport={isExport}
                         html={data.intro}
+                        placeholder="在最开始想说的是……"
                         onChange={(val: string) => updateDataField('intro', val)}
                         className="text-[42px] mt-2 leading-[1.6] font-serif font-medium relative z-10 tracking-tight min-h-[2em]"
                       />
@@ -338,13 +351,14 @@ const SummaryCanvas = ({
         const isTypeOpen = activePicker?.id === item.id && activePicker?.type === 'type';
         
         return (
-          <div key={item.id} className={`group relative flex gap-[110px] items-start transition-all duration-500 p-[40px] -mx-[40px] rounded-[70px]`}>
+          <div key={item.id} data-item-id={item.id} className={`group relative flex gap-[110px] items-start transition-all duration-500 p-[40px] -mx-[40px] rounded-[70px]`}>
             <div className="flex flex-col items-end pt-[22px] min-w-[260px] relative">
               <span className="text-[120px] font-serif italic leading-none mb-[32px] font-black opacity-10" style={{ color: currentTheme.accent }}>{String(data.items.findIndex(i => i.id === item.id) + 1).padStart(2, '0')}</span>
               <EditableArea 
                 tag="span"
                 isExport={isExport}
                 html={item.date}
+                placeholder="日期"
                 onChange={(val: string) => updateItemField(item.id, 'date', val)}
                 className="text-[34px] font-mono font-black tracking-widest min-w-[100px] text-right"
               />
@@ -380,6 +394,7 @@ const SummaryCanvas = ({
                   tag="h2"
                   isExport={isExport}
                   html={item.title}
+                  placeholder="作品名"
                   onChange={(val: string) => updateItemField(item.id, 'title', val)}
                   className="text-[76px] font-serif font-black leading-tight tracking-tight w-full min-h-[1em]"
                 />
@@ -416,10 +431,24 @@ const SummaryCanvas = ({
                 </div>
               </div>
 
+              {/* 正文输入区域：仅在没有内容块时显示 */}
+              {item.contents.length === 0 && (
+                <div className="relative group/main-content mb-8">
+                  <EditableArea 
+                    isExport={isExport}
+                    html={item.mainContent}
+                    placeholder="在此输入精彩节选..."
+                    onChange={(val: string) => updateItemField(item.id, 'mainContent', val)}
+                    onPaste={(e: any) => handlePaste(item.id, null, 'mainContent', e)}
+                    className="text-[44px] leading-[1.85] font-serif whitespace-pre-wrap break-words break-all w-full min-h-[1.5em]"
+                  />
+                </div>
+              )}
+
               <div className="flex flex-col mb-8 relative">
                 {item.contents.map((c, idx) => (
                   <React.Fragment key={idx}>
-                    <div className={`${idx === 0 ? 'mt-14 mb-4' : 'mt-20 mb-10'} relative flex items-center justify-start pr-20 group/divider`}>
+                    <div className="mt-14 mb-4 relative flex items-center justify-start pr-20 group/divider">
                       <div className="w-1.5 h-32 shrink-0 rounded-full" style={{ backgroundColor: currentTheme.accent }}></div>
                       <div className="h-[1px] flex-1 ml-10" style={{ backgroundColor: `${currentTheme.text}20` }}></div>
                       <div className="absolute left-6 -top-14 flex flex-col gap-2">
@@ -441,25 +470,23 @@ const SummaryCanvas = ({
                          <div className="w-3 h-3 rounded-full bg-current opacity-10"></div>
                          <div className="w-3 h-3 rounded-full bg-current opacity-5"></div>
                       </div>
-                      <div className="absolute right-0 -bottom-10 opacity-[0.03] select-none pointer-events-none">
-                        <span className="text-[120px] font-mono font-black uppercase tracking-tighter">DATA ARCHIVE</span>
-                      </div>
                     </div>
                     
                     <div className="relative group/block">
                       <EditableArea 
                         isExport={isExport}
                         html={c}
+                        placeholder="描述具体分项内容..."
                         onChange={(val: string) => updateContentBlock(item.id, idx, val)}
                         onPaste={(e: any) => handlePaste(item.id, idx, 'contents', e)}
                         className="text-[44px] leading-[1.85] font-serif whitespace-pre-wrap break-words break-all w-full min-h-[1.5em]"
                       />
-                      {!isExport && item.contents.length > 1 && (
+                      {!isExport && (
                         <button 
                           onClick={() => removeContentBlock(item.id, idx)}
-                          className="absolute -left-12 top-2 opacity-0 group-hover/block:opacity-40 hover:opacity-100 transition-opacity p-2 text-red-400"
+                          className="absolute -left-20 top-4 opacity-0 group-hover/block:opacity-40 hover:opacity-100 transition-opacity p-4 text-red-500 rounded-full hover:bg-red-50"
                         >
-                          <MinusSquare size={24} />
+                          <MinusSquare size={48} />
                         </button>
                       )}
                     </div>
@@ -472,7 +499,7 @@ const SummaryCanvas = ({
                     style={{ color: currentTheme.accent }}
                    >
                      <PlusSquare size={28} />
-                     Add Content Block
+                     添加内容块
                    </button>
                 )}
               </div>
@@ -485,10 +512,11 @@ const SummaryCanvas = ({
                   <span className="[writing-mode:vertical-lr] text-[20px] font-mono font-black tracking-[0.2em] opacity-40 uppercase">THOUGHTS</span>
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-[28px] font-serif font-black mb-6 tracking-widest uppercase opacity-80" style={{ color: currentTheme.accent }}>{data.author}有话说 / {data.author.toUpperCase()}'S MESSAGE</h3>
+                  <h3 className="text-[28px] font-serif font-black mb-6 tracking-widest uppercase opacity-80" style={{ color: currentTheme.accent }}>{data.author || '作者'}有话说 / {(data.author || 'AUTHOR').toUpperCase()}'S MESSAGE</h3>
                   <EditableArea 
                     isExport={isExport}
                     html={item.thoughts}
+                    placeholder="输入写后感..."
                     onChange={(val: string) => updateItemField(item.id, 'thoughts', val)}
                     onPaste={(e: any) => handlePaste(item.id, null, 'thoughts', e)}
                     className="text-[40px] leading-[1.8] font-serif font-light italic break-words break-all w-full whitespace-pre-wrap opacity-90 min-h-[2em]"
@@ -508,13 +536,13 @@ const SummaryCanvas = ({
       </div>
       <div className="grid grid-cols-12 gap-8 items-end">
         <div className="col-span-8 flex flex-col gap-4 justify-center">
-          <span className="text-[42px] font-serif font-black tracking-[0.2em] leading-none">年度作品 PROJECT</span>
+          <span className="text-[42px] font-serif font-black tracking-[0.2em] font-serif leading-none">年度作品 PROJECT</span>
           <span className="text-[22px] font-mono font-bold opacity-80 uppercase tracking-[0.6em] font-black leading-none">ALL RIGHTS RESERVED.</span>
         </div>
         <div className="col-span-4 flex flex-col items-end gap-4 text-right">
            <span className="text-[20px] font-mono font-black tracking-widest uppercase opacity-40 leading-none">STATUS: LOGGED / MASTERPIECE</span>
            <div className="h-[2px] w-[220px]" style={{ background: `linear-gradient(to right, transparent, ${currentTheme.accent})` }}></div>
-           <span className="text-[40px] font-serif font-black tracking-tight leading-none">© {data.year} <span style={{ color: currentTheme.accent }}>{data.author}</span></span>
+           <span className="text-[40px] font-serif font-black tracking-tight leading-none">© {data.year} <span style={{ color: currentTheme.accent }}>{data.author || '作者'}</span></span>
         </div>
       </div>
     </div>
@@ -527,36 +555,43 @@ const App = () => {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        parsed.items = parsed.items.map((item: any) => ({
+        parsed.items = (parsed.items || []).map((item: any) => ({
           ...item,
-          contents: item.contents || [item.content || DEFAULT_TEXT]
+          mainContent: item.mainContent || DEFAULT_TEXT,
+          contents: item.contents || []
         }));
-        return parsed;
+        return {
+          customColors: {
+            bg: '#F8F8F8',
+            accent: '#000000',
+            text: '#1A1A1A',
+            secondary: '#666666',
+            card: 'rgba(255,255,255,0.8)'
+          },
+          ...parsed
+        };
       } catch (e) {
         console.error("Failed to parse saved data:", e);
       }
     }
     return {
-      mainTitle: '衔书又止',
-      author: '琉璃',
+      mainTitle: '键入一个标题',
+      author: '',
       year: new Date().getFullYear().toString(),
       wordCount: '0',
-      intro: '人类总喜欢给万物下定义，好像不说清楚我是谁、你是什么，第二天太阳就不会升起来一样',
-      summaryType: '彩云易散琉璃脆',
+      intro: '',
+      summaryType: '',
       themeId: 'rose',
-      savedCategories: ['文稿'],
-      savedTypes: ['游戏掉落鉴', '段子体', '人生四格', '常稿', '短打', '猫塑', '黄油鉴', '结局鉴'],
-      items: [
-        {
-          id: 'init-1',
-          title: '',
-          date: GET_CURRENT_DATE(),
-          category: '文稿',
-          type: '无',
-          contents: [DEFAULT_TEXT],
-          thoughts: DEFAULT_TEXT
-        }
-      ]
+      customColors: {
+        bg: '#F8F8F8',
+        accent: '#000000',
+        text: '#1A1A1A',
+        secondary: '#666666',
+        card: 'rgba(255,255,255,0.8)'
+      },
+      savedCategories: [],
+      savedTypes: [],
+      items: []
     };
   });
 
@@ -568,6 +603,7 @@ const App = () => {
   const [showTagManager, setShowTagManager] = useState(false);
   const [showThemePicker, setShowThemePicker] = useState(false);
   const [showExportMenu, setShowExportMenu] = useState(false);
+  const [showJumpMenu, setShowJumpMenu] = useState(false);
   const [exportSubMode, setExportSubMode] = useState<'main' | 'select' | 'all'>('main');
   const [newCatInput, setNewCatInput] = useState('');
   const [newTypeInput, setNewTypeInput] = useState('');
@@ -578,7 +614,6 @@ const App = () => {
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [scale, setScale] = useState(1);
   const [canvasRealHeight, setCanvasRealHeight] = useState(0);
-  const [showScrollTop, setShowScrollTop] = useState(false);
   
   const [activePicker, setActivePicker] = useState<{id: string, type: 'category' | 'type'} | null>(null);
   const [selectedItemIds, setSelectedItemIds] = useState<string[]>([]);
@@ -590,7 +625,16 @@ const App = () => {
   const [currentFontSize, setCurrentFontSize] = useState(16);
   const [currentAlignment, setCurrentAlignment] = useState<string>('left');
 
-  const currentTheme = THEMES.find(t => t.id === data.themeId) || THEMES[0];
+  const currentThemeBase = THEMES.find(t => t.id === data.themeId) || THEMES[0];
+  const currentTheme = {
+    ...currentThemeBase,
+    bg: data.themeId === 'custom' ? data.customColors.bg : currentThemeBase.bg,
+    accent: data.themeId === 'custom' ? data.customColors.accent : currentThemeBase.accent,
+    text: data.themeId === 'custom' ? data.customColors.text : currentThemeBase.text,
+    secondary: data.themeId === 'custom' ? data.customColors.secondary : currentThemeBase.secondary,
+    card: data.themeId === 'custom' ? data.customColors.card : currentThemeBase.card,
+  };
+
   const canvasRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const exportContainerRef = useRef<HTMLDivElement>(null);
@@ -635,12 +679,23 @@ const App = () => {
     return () => resizeObserver.disconnect();
   }, [data.items, data.intro]);
 
-  const handleScroll = (e: React.UIEvent<HTMLElement>) => {
-    setShowScrollTop(e.currentTarget.scrollTop > 400);
-  };
-
   const scrollToTop = () => {
     scrollContainerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+    setShowJumpMenu(false);
+  };
+
+  const scrollToBottom = () => {
+    scrollContainerRef.current?.scrollTo({ top: scrollContainerRef.current.scrollHeight, behavior: 'smooth' });
+    setShowJumpMenu(false);
+  };
+
+  const scrollToItem = (id: string) => {
+    const itemEl = canvasRef.current?.querySelector(`[data-item-id="${id}"]`) as HTMLElement;
+    if (itemEl && scrollContainerRef.current) {
+      const targetTop = itemEl.offsetTop * scale;
+      scrollContainerRef.current.scrollTo({ top: targetTop, behavior: 'smooth' });
+      setShowJumpMenu(false);
+    }
   };
 
   const addNewItem = () => {
@@ -650,7 +705,8 @@ const App = () => {
       date: GET_CURRENT_DATE(),
       category: data.savedCategories[0] || '未分类',
       type: data.savedTypes[0] || '无',
-      contents: [DEFAULT_TEXT],
+      mainContent: DEFAULT_TEXT,
+      contents: [],
       thoughts: DEFAULT_TEXT
     };
     setData(prev => ({ ...prev, items: [...prev.items, newItem] }));
@@ -664,9 +720,9 @@ const App = () => {
     setData(prev => ({ ...prev, items: prev.items.filter(i => i.id !== id) }));
   };
 
-  const updateDataField = (field: keyof Omit<SummaryData, 'items' | 'savedCategories' | 'savedTypes'>, value: string) => {
+  const updateDataField = (field: keyof Omit<SummaryData, 'items' | 'savedCategories' | 'savedTypes' | 'customColors'>, value: string) => {
     setData(prev => {
-      if (prev[field] === value) return prev;
+      if ((prev as any)[field] === value) return prev;
       return { ...prev, [field]: value };
     });
   };
@@ -803,6 +859,7 @@ const App = () => {
         };
         return {
           ...item,
+          mainContent: processHtml(item.mainContent),
           contents: item.contents.map(c => processHtml(c)),
           thoughts: processHtml(item.thoughts)
         };
@@ -903,9 +960,17 @@ const App = () => {
     setShowTagManager(false);
     setShowFontSizeSlider(false);
     setShowColorPicker(false);
+    setShowJumpMenu(false);
   };
 
   const POPUP_WRAPPER_CLASS = "fixed bottom-[calc(3.5rem+env(safe-area-inset-bottom)+16px)] left-4 right-4 bg-white/95 backdrop-blur-3xl rounded-[32px] shadow-[0_32px_80px_-16px_rgba(0,0,0,0.25)] border border-white/80 p-5 animate-in slide-in-from-bottom-4 fade-in duration-500 z-[300]";
+
+  const updateCustomColor = (key: keyof SummaryData['customColors'], value: string) => {
+    setData(prev => ({
+      ...prev,
+      customColors: { ...prev.customColors, [key]: value }
+    }));
+  };
 
   return (
     <div className="fixed inset-0 bg-[#E8E4DF] flex flex-col overflow-hidden" onClick={handleGlobalClick}>
@@ -931,7 +996,7 @@ const App = () => {
         </div>
       )}
 
-      <main ref={scrollContainerRef} onScroll={handleScroll} className="flex-1 overflow-y-auto no-scrollbar scroll-smooth overflow-x-hidden">
+      <main ref={scrollContainerRef} className="flex-1 overflow-y-auto no-scrollbar scroll-smooth overflow-x-hidden">
         <div style={{ width: '100%', height: `${canvasRealHeight * scale}px`, position: 'relative' }}>
           <div style={{ width: '1440px', transform: `scale(${scale})`, transformOrigin: 'top left', position: 'absolute', top: 0, left: 0 }}>
             <SummaryCanvas 
@@ -952,14 +1017,7 @@ const App = () => {
             />
           </div>
         </div>
-        <div className="h-[30px] pointer-events-none" />
       </main>
-
-      {showScrollTop && (
-        <button onClick={(e) => { e.stopPropagation(); scrollToTop(); }} className="fixed bottom-32 right-6 w-14 h-14 bg-white/60 backdrop-blur-md rounded-full flex items-center justify-center shadow-lg border border-black/5 z-[60] animate-in fade-in zoom-in duration-300 active:scale-90" style={{ color: currentTheme.accent }}>
-          <ArrowUp size={28} />
-        </button>
-      )}
 
       <div className="relative z-[250] bg-white/80 backdrop-blur-xl border-t border-black/5 flex flex-col" onClick={e => e.stopPropagation()}>
         <div className="px-4 py-2 flex flex-col gap-2 relative border-b border-black/5">
@@ -990,17 +1048,15 @@ const App = () => {
           )}
           <div className="flex items-center justify-between">
             {toolbarMode === 'normal' ? (
-              <div className="flex items-center gap-1 w-full flex-nowrap overflow-x-auto no-scrollbar">
-                <button onMouseDown={(e) => { e.preventDefault(); applyStyle('justifyLeft'); }} className={`p-2.5 rounded-2xl transition-all shrink-0 ${currentAlignment === 'left' ? 'bg-black text-white' : 'hover:bg-black/5'}`}><AlignLeft size={20} /></button>
-                <button onMouseDown={(e) => { e.preventDefault(); applyStyle('justifyCenter'); }} className={`p-2.5 rounded-2xl transition-all shrink-0 ${currentAlignment === 'center' ? 'bg-black text-white' : 'hover:bg-black/5'}`}><AlignCenter size={20} /></button>
-                <button onMouseDown={(e) => { e.preventDefault(); applyStyle('justifyRight'); }} className={`p-2.5 rounded-2xl transition-all shrink-0 ${currentAlignment === 'right' ? 'bg-black text-white' : 'hover:bg-black/5'}`}><AlignRight size={20} /></button>
-                <button onMouseDown={(e) => { e.preventDefault(); applyStyle('justifyFull'); }} className={`p-2.5 rounded-2xl transition-all shrink-0 ${currentAlignment === 'justify' ? 'bg-black text-white' : 'hover:bg-black/5'}`}><AlignJustify size={20} /></button>
-                <div className="w-[1px] h-6 bg-black/5 mx-1 shrink-0"></div>
+              <div className="flex items-center justify-around w-full px-2">
+                <div className="flex items-center bg-black/[0.04] rounded-2xl p-0.5 shrink-0">
+                  <button onMouseDown={(e) => { e.preventDefault(); applyStyle('justifyLeft'); }} className={`p-2.5 rounded-[14px] transition-all ${currentAlignment === 'left' ? 'bg-white shadow-sm text-black' : 'text-black/40 hover:bg-black/5'}`}><AlignLeft size={20} /></button>
+                  <button onMouseDown={(e) => { e.preventDefault(); applyStyle('justifyCenter'); }} className={`p-2.5 rounded-[14px] transition-all ${currentAlignment === 'center' ? 'bg-white shadow-sm text-black' : 'text-black/40 hover:bg-black/5'}`}><AlignCenter size={20} /></button>
+                  <button onMouseDown={(e) => { e.preventDefault(); applyStyle('justifyRight'); }} className={`p-2.5 rounded-[14px] transition-all ${currentAlignment === 'right' ? 'bg-white shadow-sm text-black' : 'text-black/40 hover:bg-black/5'}`}><AlignRight size={20} /></button>
+                  <button onMouseDown={(e) => { e.preventDefault(); applyStyle('justifyFull'); }} className={`p-2.5 rounded-[14px] transition-all ${currentAlignment === 'justify' ? 'bg-white shadow-sm text-black' : 'text-black/40 hover:bg-black/5'}`}><AlignJustify size={20} /></button>
+                </div>
                 <button onMouseDown={(e) => { e.preventDefault(); setShowFontSizeSlider(!showFontSizeSlider); setShowColorPicker(false); }} className={`p-2.5 rounded-2xl transition-colors flex items-center gap-1 shrink-0 ${showFontSizeSlider ? 'bg-black text-white' : 'hover:bg-black/5'}`}><Type size={20} /></button>
-                <div className="w-[1px] h-6 bg-black/5 mx-1 shrink-0"></div>
                 <button onMouseDown={(e) => { e.preventDefault(); setShowColorPicker(!showColorPicker); setShowFontSizeSlider(false); }} className={`p-2.5 rounded-2xl transition-colors shrink-0 ${showColorPicker ? 'bg-black/10' : 'hover:bg-black/5'}`}><Palette size={20} style={{ color: currentTheme.accent }} /></button>
-                <div className="flex-1"></div>
-                <button onClick={(e) => { e.stopPropagation(); setToolbarMode('batch'); }} className="p-2.5 bg-black/5 rounded-2xl flex items-center gap-2 shrink-0"><Search size={18} /><span className="text-[10px] font-bold">批量</span></button>
               </div>
             ) : (
               <div className="flex items-center gap-2 w-full flex-nowrap animate-in fade-in duration-300">
@@ -1019,7 +1075,7 @@ const App = () => {
           </div>
         </div>
 
-        <footer className="h-14 flex items-center justify-around px-4 safe-area-bottom shrink-0">
+        <footer className="h-14 flex items-center justify-around px-2 safe-area-bottom shrink-0">
           <div className="relative">
             {showConfig && (
               <div className={POPUP_WRAPPER_CLASS} onClick={e => e.stopPropagation()}>
@@ -1029,18 +1085,18 @@ const App = () => {
                     <button onClick={() => setShowConfig(false)} className="text-gray-300 hover:text-black"><X size={16}/></button>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1"><label className="text-[10px] font-black text-gray-400 pl-1 uppercase">项目标题</label><input value={data.mainTitle} onChange={e => updateDataField('mainTitle', e.target.value)} className="w-full bg-black/[0.03] px-3 py-2.5 rounded-[16px] text-[11px] font-serif font-black outline-none transition-all" /></div>
-                    <div className="space-y-1"><label className="text-[10px] font-black text-gray-400 pl-1 uppercase">作者姓名</label><input value={data.author} onChange={e => updateDataField('author', e.target.value)} className="w-full bg-black/[0.03] px-3 py-2.5 rounded-[16px] text-[11px] font-black outline-none transition-all" /></div>
+                    <div className="space-y-1"><label className="text-[10px] font-black text-gray-400 pl-1 uppercase">项目标题</label><input value={data.mainTitle} onChange={e => updateDataField('mainTitle', e.target.value)} placeholder="键入一个标题" className="w-full bg-black/[0.03] px-3 py-2.5 rounded-[16px] text-[11px] font-serif font-black outline-none transition-all" /></div>
+                    <div className="space-y-1"><label className="text-[10px] font-black text-gray-400 pl-1 uppercase">作者姓名</label><input value={data.author} onChange={e => updateDataField('author', e.target.value)} placeholder="您的姓名" className="w-full bg-black/[0.03] px-3 py-2.5 rounded-[16px] text-[11px] font-black outline-none transition-all" /></div>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1"><label className="text-[10px] font-black text-gray-400 pl-1 uppercase">总结类型</label><input value={data.summaryType} onChange={e => updateDataField('summaryType', e.target.value)} className="w-full bg-black/[0.03] px-3 py-2.5 rounded-[16px] text-[11px] font-bold outline-none transition-all" /></div>
+                    <div className="space-y-1"><label className="text-[10px] font-black text-gray-400 pl-1 uppercase">总结类型</label><input value={data.summaryType} onChange={e => updateDataField('summaryType', e.target.value)} placeholder="工作总结 / 生活回忆" className="w-full bg-black/[0.03] px-3 py-2.5 rounded-[16px] text-[11px] font-bold outline-none transition-all" /></div>
                     <div className="space-y-1"><label className="text-[10px] font-black text-gray-400 pl-1 uppercase">项目年份</label><input value={data.year} onChange={e => updateDataField('year', e.target.value)} className="w-full bg-black/[0.03] px-3 py-2.5 rounded-[16px] text-[11px] font-mono font-black outline-none transition-all" /></div>
                   </div>
-                  <div className="space-y-1"><label className="text-[10px] font-black text-gray-400 pl-1 uppercase">总结前言</label><textarea value={data.intro} onChange={e => updateDataField('intro', e.target.value)} className="w-full bg-black/[0.03] px-3 py-3 rounded-[16px] text-[11px] font-serif outline-none transition-all min-h-[100px] resize-none" placeholder="填写总结前言..." /></div>
+                  <div className="space-y-1"><label className="text-[10px] font-black text-gray-400 pl-1 uppercase">总结前言</label><textarea value={data.intro} onChange={e => updateDataField('intro', e.target.value)} className="w-full bg-black/[0.03] px-3 py-3 rounded-[16px] text-[11px] font-serif outline-none transition-all min-h-[100px] resize-none" placeholder="在最开始想说的是……" /></div>
                 </div>
               </div>
             )}
-            <button onClick={(e) => { e.stopPropagation(); setShowConfig(!showConfig); setShowTagManager(false); setShowThemePicker(false); setShowExportMenu(false); }} className={`flex flex-col items-center gap-0.5 transition-colors ${showConfig ? 'text-black' : 'text-black/40'}`}><Settings2 size={18} /><span className="text-[10px] font-bold">设定</span></button>
+            <button onClick={(e) => { e.stopPropagation(); setShowConfig(!showConfig); setShowTagManager(false); setShowThemePicker(false); setShowExportMenu(false); setShowJumpMenu(false); }} className={`flex flex-col items-center gap-0.5 transition-colors ${showConfig ? 'text-black' : 'text-black/40'}`}><Settings2 size={18} /><span className="text-[10px] font-bold">设定</span></button>
           </div>
           <div className="relative">
             {showTagManager && (
@@ -1054,21 +1110,99 @@ const App = () => {
                 </div>
               </div>
             )}
-            <button onClick={(e) => { e.stopPropagation(); setShowTagManager(!showTagManager); setShowConfig(false); setShowThemePicker(false); setShowExportMenu(false); }} className={`flex flex-col items-center gap-0.5 transition-colors ${showTagManager ? 'text-black' : 'text-black/40'}`}><Tags size={18} /><span className="text-[10px] font-bold">库</span></button>
+            <button onClick={(e) => { e.stopPropagation(); setShowTagManager(!showTagManager); setShowConfig(false); setShowThemePicker(false); setShowExportMenu(false); setShowJumpMenu(false); }} className={`flex flex-col items-center gap-0.5 transition-colors ${showTagManager ? 'text-black' : 'text-black/40'}`}><Tags size={18} /><span className="text-[10px] font-bold">库</span></button>
           </div>
-          <button onClick={(e) => { e.stopPropagation(); addNewItem(); }} className="w-10 h-10 bg-[#1A1A1A] rounded-full flex items-center justify-center text-white shadow-xl transition-transform"><Plus size={20} strokeWidth={3} /></button>
+
+          <div className="relative">
+             {showJumpMenu && (
+               <div className={POPUP_WRAPPER_CLASS} onClick={e => e.stopPropagation()}>
+                 <div className="space-y-4">
+                    <div className="flex items-center justify-between"><h3 className="text-[15px] font-serif font-black text-gray-800">快速跳转</h3><button onClick={() => setShowJumpMenu(false)} className="text-gray-300 hover:text-black"><X size={16} /></button></div>
+                    <div className="grid grid-cols-2 gap-2">
+                       <button onClick={scrollToTop} className="flex items-center justify-center gap-2 p-4 bg-black/[0.02] hover:bg-black/[0.05] rounded-[18px] transition-all"><ArrowUp size={18} className="text-gray-400" /><span className="font-black text-[12px]">回到顶部</span></button>
+                       <button onClick={scrollToBottom} className="flex items-center justify-center gap-2 p-4 bg-black/[0.02] hover:bg-black/[0.05] rounded-[18px] transition-all"><ArrowDown size={18} className="text-gray-400" /><span className="font-black text-[12px]">回到底部</span></button>
+                    </div>
+                    <div className="space-y-2">
+                       <label className="text-[10px] font-black text-black/40 uppercase tracking-widest pl-1">时间轴索引</label>
+                       <div className="max-h-[300px] overflow-y-auto no-scrollbar space-y-2 pr-1">
+                          {data.items.map((item, i) => (
+                            <button key={item.id} onClick={() => scrollToItem(item.id)} className="w-full flex items-center gap-4 p-3 bg-black/[0.01] hover:bg-black/[0.03] rounded-[16px] transition-all border border-black/[0.03] group">
+                               <span className="w-8 font-mono font-black text-[14px] opacity-20 group-hover:opacity-40">{String(i + 1).padStart(2, '0')}</span>
+                               <div className="flex-1 flex flex-col items-start gap-0.5 overflow-hidden">
+                                  <span className="text-[13px] font-serif font-black truncate w-full text-left">{item.title || '无标题记录'}</span>
+                                  <span className="text-[10px] font-mono opacity-40">{item.date} · {item.category}</span>
+                                </div>
+                                <ArrowRight size={14} className="opacity-0 group-hover:opacity-20 -translate-x-2 group-hover:translate-x-0 transition-all" />
+                            </button>
+                          ))}
+                       </div>
+                    </div>
+                 </div>
+               </div>
+             )}
+             <button onClick={(e) => { e.stopPropagation(); setShowJumpMenu(!showJumpMenu); setShowTagManager(false); setShowConfig(false); setShowThemePicker(false); setShowExportMenu(false); }} className={`flex flex-col items-center gap-0.5 transition-colors ${showJumpMenu ? 'text-black' : 'text-black/40'}`}><Navigation size={18} /><span className="text-[10px] font-bold">跳转</span></button>
+          </div>
+
+          <button onClick={(e) => { e.stopPropagation(); addNewItem(); }} className="w-10 h-10 bg-[#1A1A1A] rounded-full flex items-center justify-center text-white shadow-xl transition-transform shrink-0"><Plus size={20} strokeWidth={3} /></button>
+          
+          <button onClick={(e) => { e.stopPropagation(); setToolbarMode(toolbarMode === 'batch' ? 'normal' : 'batch'); }} className={`flex flex-col items-center gap-0.5 transition-colors ${toolbarMode === 'batch' ? 'text-black' : 'text-black/40'}`}><Search size={18} /><span className="text-[10px] font-bold">批量</span></button>
+
           <div className="relative">
             {showThemePicker && (
               <div className={POPUP_WRAPPER_CLASS} onClick={e => e.stopPropagation()}>
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between"><h3 className="text-[15px] font-serif font-black text-gray-800">切换主题</h3><button onClick={() => setShowThemePicker(false)} className="text-gray-300 hover:text-black"><X size={16} /></button></div>
-                  <div className="grid grid-cols-2 gap-2">
-                    {THEMES.map(t => (<button key={t.id} onClick={() => { setData({...data, themeId: t.id}); setShowThemePicker(false); }} className={`flex items-center gap-3 p-3 rounded-[18px] transition-all border ${data.themeId === t.id ? 'bg-black/[0.05] border-black/10' : 'bg-black/[0.01] border-transparent'}`}><div className="w-5 h-5 rounded-full" style={{ backgroundColor: t.accent }}></div><span className={`text-[12px] font-black ${data.themeId === t.id ? 'text-black' : 'text-gray-400'}`}>{t.name}</span>{data.themeId === t.id && <Check size={14} className="ml-auto opacity-50" />}</button>))}
+                  <div className="flex items-center justify-between"><h3 className="text-[15px] font-serif font-black text-gray-800">配色修改</h3><button onClick={() => setShowThemePicker(false)} className="text-gray-300 hover:text-black"><X size={16} /></button></div>
+                  
+                  <div className="grid grid-cols-2 gap-2 mb-4">
+                    {THEMES.map(t => (
+                      <button key={t.id} onClick={() => { setData({...data, themeId: t.id}); }} className={`flex items-center gap-3 p-3 rounded-[18px] transition-all border ${data.themeId === t.id ? 'bg-black/[0.05] border-black/10' : 'bg-black/[0.01] border-transparent'}`}>
+                        <div className="w-5 h-5 rounded-full" style={{ backgroundColor: t.accent }}></div>
+                        <span className={`text-[12px] font-black ${data.themeId === t.id ? 'text-black' : 'text-gray-400'}`}>{t.name}</span>
+                        {data.themeId === t.id && <Check size={14} className="ml-auto opacity-50" />}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="space-y-3 pt-3 border-t border-black/5">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[10px] font-black text-black/40 uppercase tracking-widest">模块细节配色 ({data.themeId === 'custom' ? '自定义模式' : '当前主题'})</span>
+                      {data.themeId !== 'custom' && (
+                        <button onClick={() => setData({...data, themeId: 'custom', customColors: { ...currentTheme }})} className="text-[10px] font-black text-black/60 bg-black/5 px-2 py-1 rounded-full">进入自定义</button>
+                      )}
+                    </div>
+                    
+                    {[
+                      { key: 'bg', label: '背景颜色' },
+                      { key: 'accent', label: '强调颜色' },
+                      { key: 'text', label: '正文颜色' },
+                      { key: 'secondary', label: '辅助文字' },
+                      { key: 'card', label: '卡片底色' }
+                    ].map((item) => (
+                      <div key={item.key} className="flex items-center gap-4 bg-black/[0.02] p-2 rounded-[18px] border border-black/5">
+                        <div className="w-8 h-8 rounded-full shadow-inner border border-black/5 shrink-0" style={{ backgroundColor: (currentTheme as any)[item.key] }}></div>
+                        <div className="flex-1 flex flex-col">
+                          <span className="text-[11px] font-black text-black/80">{item.label}</span>
+                          <span className="text-[10px] font-mono opacity-40 uppercase">{(currentTheme as any)[item.key]}</span>
+                        </div>
+                        <input 
+                          type="text" 
+                          value={(currentTheme as any)[item.key]}
+                          onChange={(e) => {
+                            if (data.themeId !== 'custom') {
+                              setData(prev => ({ ...prev, themeId: 'custom', customColors: { ...currentTheme, [item.key]: e.target.value } }));
+                            } else {
+                              updateCustomColor(item.key as any, e.target.value);
+                            }
+                          }}
+                          className="w-20 bg-white px-2 py-1 rounded-lg text-[10px] font-mono font-bold outline-none border border-black/10 focus:border-black/30"
+                        />
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
             )}
-            <button onClick={(e) => { e.stopPropagation(); setShowThemePicker(!showThemePicker); setShowConfig(false); setShowTagManager(false); setShowExportMenu(false); }} className={`flex flex-col items-center gap-0.5 transition-colors ${showThemePicker ? 'text-black' : 'text-black/40'}`}><Palette size={18} /><span className="text-[10px] font-bold">主题</span></button>
+            <button onClick={(e) => { e.stopPropagation(); setShowThemePicker(!showThemePicker); setShowConfig(false); setShowTagManager(false); setShowExportMenu(false); setShowJumpMenu(false); }} className={`flex flex-col items-center gap-0.5 transition-colors ${showThemePicker ? 'text-black' : 'text-black/40'}`}><Palette size={18} /><span className="text-[10px] font-bold">主题</span></button>
           </div>
           <div className="relative">
             {showExportMenu && (
@@ -1092,7 +1226,7 @@ const App = () => {
                 )}
               </div>
             )}
-            <button onClick={(e) => { e.stopPropagation(); setShowExportMenu(!showExportMenu); if(!showExportMenu) { setExportSubMode('main'); setSelectedItemIds([]); } setShowThemePicker(false); setShowConfig(false); setShowTagManager(false); }} disabled={isExporting} className={`flex flex-col items-center gap-0.5 transition-colors ${showExportMenu ? 'text-black' : 'text-black/40'}`}>{isExporting ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}<span className="text-[10px] font-bold">发布</span></button>
+            <button onClick={(e) => { e.stopPropagation(); setShowExportMenu(!showExportMenu); if(!showExportMenu) { setExportSubMode('main'); setSelectedItemIds([]); } setShowThemePicker(false); setShowConfig(false); setShowTagManager(false); setShowJumpMenu(false); }} disabled={isExporting} className={`flex flex-col items-center gap-0.5 transition-colors ${showExportMenu ? 'text-black' : 'text-black/40'}`}>{isExporting ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}<span className="text-[10px] font-bold">发布</span></button>
           </div>
         </footer>
       </div>

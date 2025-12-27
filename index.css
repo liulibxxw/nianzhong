@@ -29,6 +29,20 @@ body {
 [contenteditable="true"] {
   user-select: text !important;
   -webkit-user-select: text !important;
+  position: relative;
+  min-height: 1em;
+}
+
+/* 占位符支持 */
+[contenteditable="true"]:empty:before {
+  content: attr(data-placeholder);
+  color: currentColor;
+  opacity: 0.3;
+  font-style: normal;
+  pointer-events: none;
+  display: block;
+  /* 强制重置透明填充效果，确保占位符在渐变标题中可见 */
+  -webkit-text-fill-color: currentColor !important;
 }
 
 /* 字体工具类 */
